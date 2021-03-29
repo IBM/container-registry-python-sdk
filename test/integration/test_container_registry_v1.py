@@ -47,9 +47,10 @@ class TestContainerRegistryV1():
                 )
             assert cls.container_registry_service is not None
 
-            cls.url = cls.config["URL"]
-            assert cls.url is not None
-            cls.dns_name = cls.url.removeprefix("https://")
+            cls.dns_name = cls.config["URL"]
+            assert cls.dns_name is not None
+            if cls.dns_name.startswith("https://"):
+                cls.dns_name = cls.dns_name[len("https://"):]
 
         print('Setup complete.')
 
