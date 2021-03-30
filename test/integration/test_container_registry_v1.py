@@ -172,6 +172,8 @@ class TestContainerRegistryV1():
         )
 
         assert get_image_manifest_response.get_status_code() == 200
+        image_manifest = get_image_manifest_response.get_result()
+        assert image_manifest.get("schemaVersion") == 2
 
     @needscredentials
     def test_get_messages(self):

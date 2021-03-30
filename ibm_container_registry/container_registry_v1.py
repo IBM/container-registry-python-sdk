@@ -504,7 +504,7 @@ class ContainerRegistryV1(BaseService):
                endpoint to review images that are in the registry.
         :param dict headers: A `dict` containing the request headers
         :return: A `DetailedResponse` containing the result, headers and HTTP status code.
-        :rtype: DetailedResponse
+        :rtype: DetailedResponse with `dict` result
         """
 
         if image is None:

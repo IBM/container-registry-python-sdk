@@ -682,8 +682,11 @@ class TestGetImageManifest():
         """
         # Set up mock
         url = self.preprocess_url(base_url + '/api/v1/images/testString/manifest')
+        mock_response = '{"mapKey": {"anyKey": "anyValue"}}'
         responses.add(responses.GET,
                       url,
+                      body=mock_response,
+                      content_type='application/json',
                       status=200)
 
         # Set up parameter values
@@ -707,8 +710,11 @@ class TestGetImageManifest():
         """
         # Set up mock
         url = self.preprocess_url(base_url + '/api/v1/images/testString/manifest')
+        mock_response = '{"mapKey": {"anyKey": "anyValue"}}'
         responses.add(responses.GET,
                       url,
+                      body=mock_response,
+                      content_type='application/json',
                       status=200)
 
         # Set up parameter values
