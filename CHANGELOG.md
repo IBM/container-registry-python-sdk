@@ -1,3 +1,10 @@
+## [0.0.6](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.5...v0.0.6) (2021-04-14)
+
+
+### Bug Fixes
+
+* **project:** publish to pypi ([2ff8536](https://github.com/IBM/container-registry-python-sdk/commit/2ff8536bc701196fc5f253cb549e6010156128d9))
+
 ## [0.0.5](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.4...v0.0.5) (2021-04-14)
 
 
