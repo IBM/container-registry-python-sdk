@@ -1,3 +1,10 @@
+## [0.0.7](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.6...v0.0.7) (2021-04-14)
+
+
+### Bug Fixes
+
+* **project:** remove codecov steps ([faa46cd](https://github.com/IBM/container-registry-python-sdk/commit/faa46cd215eaae4952cbd61296d9c8c3d122a502))
+
 ## [0.0.6](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.5...v0.0.6) (2021-04-14)
 
 
