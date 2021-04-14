@@ -1,3 +1,10 @@
+## [0.0.5](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.4...v0.0.5) (2021-04-14)
+
+
+### Bug Fixes
+
+* **Registry:** Improve get image manifest ([6deb87d](https://github.com/IBM/container-registry-python-sdk/commit/6deb87d4ac80d8148e8cad08fef519eb0247093d))
+
 ## [0.0.4](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.3...v0.0.4) (2021-03-29)
 
 
