@@ -29,7 +29,7 @@ script: tox
 # To enable semantic-release, uncomment these sections.
 before_deploy:
 - pip install bump2version
-- nvm install 12
+- nvm install 14
 - npm install @semantic-release/changelog
 - npm install @semantic-release/exec
 - npm install @semantic-release/git
