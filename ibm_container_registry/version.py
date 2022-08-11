@@ -17,4 +17,4 @@
 """
 Version of ibm_container_registry
 """
-__version__ = '0.0.7'
+__version__ = '0.0.8'
