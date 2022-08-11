@@ -111,7 +111,7 @@ class TestContainerRegistryV1():
             include_ibm=True,
             include_private=True,
             include_manifest_lists=True,
-            vulnerabilities=True
+            vulnerabilities=False
         )
 
         assert list_images_response.get_status_code() == 200
