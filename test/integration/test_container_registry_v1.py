@@ -173,6 +173,8 @@ class TestContainerRegistryV1():
 
         assert get_image_manifest_response.get_status_code() == 200
         image_manifest = get_image_manifest_response.get_result()
+        if not isinstance(image_manifest, dict):
+            image_manifest = json.loads(image_manifest.text)
         assert image_manifest.get("schemaVersion") == 2
 
     @needscredentials
