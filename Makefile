@@ -28,7 +28,7 @@ test-int-registry:
 	python -m pytest test/integration/test_container_registry_v1.py
 
 test-int-va:
-	python -m pytest test/integration/test_vulnerability_advisor_v3.py
+	python -m pytest test/integration/test_vulnerability_advisor_v4.py
 
 lint:
 	./pylint.sh

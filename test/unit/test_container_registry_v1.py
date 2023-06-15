@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (C) Copyright IBM Corp. 2021.
+# (C) Copyright IBM Corp. 2023.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ Unit Tests for ContainerRegistryV1
 from ibm_cloud_sdk_core.authenticators.no_auth_authenticator import NoAuthAuthenticator
 import inspect
 import json
+import os
 import pytest
 import re
 import requests
@@ -29,32 +30,117 @@ from ibm_container_registry.container_registry_v1 import *
 
 account = 'testString'
 
-service = ContainerRegistryV1(
+_service = ContainerRegistryV1(
     authenticator=NoAuthAuthenticator(),
-    account=account
-    )
+    account=account,
+)
 
-base_url = 'https://us.icr.io'
-service.set_service_url(base_url)
+_base_url = 'https://icr.io'
+_service.set_service_url(_base_url)
+
+
+def preprocess_url(operation_path: str):
+    """
+    Returns the request url associated with the specified operation path.
+    This will be base_url concatenated with a quoted version of operation_path.
+    The returned request URL is used to register the mock response so it needs
+    to match the request URL that is formed by the requests library.
+    """
+    # First, unquote the path since it might have some quoted/escaped characters in it
+    # due to how the generator inserts the operation paths into the unit test code.
+    operation_path = urllib.parse.unquote(operation_path)
+
+    # Next, quote the path using urllib so that we approximate what will
+    # happen during request processing.
+    operation_path = urllib.parse.quote(operation_path, safe='/')
+
+    # Finally, form the request URL from the base URL and operation path.
+    request_url = _base_url + operation_path
+
+    # If the request url does NOT end with a /, then just return it as-is.
+    # Otherwise, return a regular expression that matches one or more trailing /.
+    if re.fullmatch('.*/+', request_url) is None:
+        return request_url
+    else:
+        return re.compile(request_url.rstrip('/') + '/+')
+
+
+def test_get_service_url_for_region():
+    """
+    get_service_url_for_region()
+    """
+    assert ContainerRegistryV1.get_service_url_for_region('INVALID_REGION') is None
+    assert ContainerRegistryV1.get_service_url_for_region('global') == 'https://icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('us-south') == 'https://us.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('uk-south') == 'https://uk.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('eu-gb') == 'https://uk.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('eu-central') == 'https://de.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('eu-de') == 'https://de.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('ap-north') == 'https://jp.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('jp-tok') == 'https://jp.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('ap-south') == 'https://au.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('au-syd') == 'https://au.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('jp-osa') == 'https://jp2.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('ca-tor') == 'https://ca.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('br-sao') == 'https://br.icr.io'
+
 
 ##############################################################################
 # Start of Service: Authorization
 ##############################################################################
 # region
 
-class TestGetAuth():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestGetAuth:
     """
     Test Class for get_auth
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_auth_all_params(self):
@@ -62,22 +148,31 @@ class TestGetAuth():
         get_auth()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/auth')
+        url = preprocess_url('/api/v1/auth')
         mock_response = '{"iam_authz": false, "private_only": true}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.get_auth()
-
+        response = _service.get_auth()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_auth_all_params_with_retries(self):
+        # Enable retries and run test_get_auth_all_params.
+        _service.enable_retries()
+        self.test_get_auth_all_params()
+
+        # Disable retries and run test_get_auth_all_params.
+        _service.disable_retries()
+        self.test_get_auth_all_params()
 
     @responses.activate
     def test_get_auth_value_error(self):
@@ -85,37 +180,38 @@ class TestGetAuth():
         test_get_auth_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/auth')
+        url = preprocess_url('/api/v1/auth')
         mock_response = '{"iam_authz": false, "private_only": true}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_auth(**req_copy)
+                _service.get_auth(**req_copy)
+
+    def test_get_auth_value_error_with_retries(self):
+        # Enable retries and run test_get_auth_value_error.
+        _service.enable_retries()
+        self.test_get_auth_value_error()
+
+        # Disable retries and run test_get_auth_value_error.
+        _service.disable_retries()
+        self.test_get_auth_value_error()
 
 
-
-class TestUpdateAuth():
+class TestUpdateAuth:
     """
     Test Class for update_auth
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_update_auth_all_params(self):
@@ -123,20 +219,22 @@ class TestUpdateAuth():
         update_auth()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/auth')
-        responses.add(responses.PATCH,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/auth')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         iam_authz = True
         private_only = True
 
         # Invoke method
-        response = service.update_auth(
+        response = _service.update_auth(
             iam_authz=iam_authz,
             private_only=private_only,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -147,6 +245,14 @@ class TestUpdateAuth():
         assert req_body['iam_authz'] == True
         assert req_body['private_only'] == True
 
+    def test_update_auth_all_params_with_retries(self):
+        # Enable retries and run test_update_auth_all_params.
+        _service.enable_retries()
+        self.test_update_auth_all_params()
+
+        # Disable retries and run test_update_auth_all_params.
+        _service.disable_retries()
+        self.test_update_auth_all_params()
 
     @responses.activate
     def test_update_auth_value_error(self):
@@ -154,10 +260,12 @@ class TestUpdateAuth():
         test_update_auth_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/auth')
-        responses.add(responses.PATCH,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/auth')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         iam_authz = True
@@ -167,10 +275,18 @@ class TestUpdateAuth():
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.update_auth(**req_copy)
+                _service.update_auth(**req_copy)
 
+    def test_update_auth_value_error_with_retries(self):
+        # Enable retries and run test_update_auth_value_error.
+        _service.enable_retries()
+        self.test_update_auth_value_error()
+
+        # Disable retries and run test_update_auth_value_error.
+        _service.disable_retries()
+        self.test_update_auth_value_error()
 
 
 # endregion
@@ -183,19 +299,57 @@ class TestUpdateAuth():
 ##############################################################################
 # region
 
-class TestListImages():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestListImages:
     """
     Test Class for list_images
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_images_all_params(self):
@@ -203,13 +357,15 @@ class TestListImages():
         list_images()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images')
+        url = preprocess_url('/api/v1/images')
         mock_response = '[{"ConfigurationIssueCount": 25, "Created": 7, "DigestTags": {"mapKey": ["inner"]}, "ExemptIssueCount": 18, "Id": "id", "IssueCount": 11, "Labels": {"mapKey": "inner"}, "ManifestType": "manifest_type", "ParentId": "parent_id", "RepoDigests": ["repo_digests"], "RepoTags": ["repo_tags"], "Size": 4, "VirtualSize": 12, "VulnerabilityCount": 19, "Vulnerable": "vulnerable"}]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'testString'
@@ -220,21 +376,21 @@ class TestListImages():
         repository = 'testString'
 
         # Invoke method
-        response = service.list_images(
+        response = _service.list_images(
             namespace=namespace,
             include_ibm=include_ibm,
             include_private=include_private,
             include_manifest_lists=include_manifest_lists,
             vulnerabilities=vulnerabilities,
             repository=repository,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
         # Validate query params
-        query_string = responses.calls[0].request.url.split('?',1)[1]
+        query_string = responses.calls[0].request.url.split('?', 1)[1]
         query_string = urllib.parse.unquote_plus(query_string)
         assert 'namespace={}'.format(namespace) in query_string
         assert 'includeIBM={}'.format('true' if include_ibm else 'false') in query_string
@@ -243,6 +399,14 @@ class TestListImages():
         assert 'vulnerabilities={}'.format('true' if vulnerabilities else 'false') in query_string
         assert 'repository={}'.format(repository) in query_string
 
+    def test_list_images_all_params_with_retries(self):
+        # Enable retries and run test_list_images_all_params.
+        _service.enable_retries()
+        self.test_list_images_all_params()
+
+        # Disable retries and run test_list_images_all_params.
+        _service.disable_retries()
+        self.test_list_images_all_params()
 
     @responses.activate
     def test_list_images_required_params(self):
@@ -250,22 +414,31 @@ class TestListImages():
         test_list_images_required_params()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images')
+        url = preprocess_url('/api/v1/images')
         mock_response = '[{"ConfigurationIssueCount": 25, "Created": 7, "DigestTags": {"mapKey": ["inner"]}, "ExemptIssueCount": 18, "Id": "id", "IssueCount": 11, "Labels": {"mapKey": "inner"}, "ManifestType": "manifest_type", "ParentId": "parent_id", "RepoDigests": ["repo_digests"], "RepoTags": ["repo_tags"], "Size": 4, "VirtualSize": 12, "VulnerabilityCount": 19, "Vulnerable": "vulnerable"}]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.list_images()
-
+        response = _service.list_images()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_list_images_required_params_with_retries(self):
+        # Enable retries and run test_list_images_required_params.
+        _service.enable_retries()
+        self.test_list_images_required_params()
+
+        # Disable retries and run test_list_images_required_params.
+        _service.disable_retries()
+        self.test_list_images_required_params()
 
     @responses.activate
     def test_list_images_value_error(self):
@@ -273,37 +446,38 @@ class TestListImages():
         test_list_images_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images')
+        url = preprocess_url('/api/v1/images')
         mock_response = '[{"ConfigurationIssueCount": 25, "Created": 7, "DigestTags": {"mapKey": ["inner"]}, "ExemptIssueCount": 18, "Id": "id", "IssueCount": 11, "Labels": {"mapKey": "inner"}, "ManifestType": "manifest_type", "ParentId": "parent_id", "RepoDigests": ["repo_digests"], "RepoTags": ["repo_tags"], "Size": 4, "VirtualSize": 12, "VulnerabilityCount": 19, "Vulnerable": "vulnerable"}]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_images(**req_copy)
+                _service.list_images(**req_copy)
+
+    def test_list_images_value_error_with_retries(self):
+        # Enable retries and run test_list_images_value_error.
+        _service.enable_retries()
+        self.test_list_images_value_error()
+
+        # Disable retries and run test_list_images_value_error.
+        _service.disable_retries()
+        self.test_list_images_value_error()
 
 
-
-class TestBulkDeleteImages():
+class TestBulkDeleteImages:
     """
     Test Class for bulk_delete_images
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_bulk_delete_images_all_params(self):
@@ -311,21 +485,23 @@ class TestBulkDeleteImages():
         bulk_delete_images()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/bulkdelete')
+        url = preprocess_url('/api/v1/images/bulkdelete')
         mock_response = '{"error": {"mapKey": {"code": "code", "message": "message"}}, "success": ["success"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         bulk_delete = ['us.icr.io/birds/woodpecker@sha256:38f97dd92769b18ca82ad9ab6667af47306e66fea5b446937eea68b10ab4bbbb', 'us.icr.io/birds/bird@sha256:38f97dd92769b18ca82ad9ab6667af47306e66fea5b446937eea68b10ab4dddd']
 
         # Invoke method
-        response = service.bulk_delete_images(
+        response = _service.bulk_delete_images(
             bulk_delete,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -335,6 +511,14 @@ class TestBulkDeleteImages():
         req_body = json.loads(str(responses.calls[0].request.body, 'utf-8'))
         assert req_body == bulk_delete
 
+    def test_bulk_delete_images_all_params_with_retries(self):
+        # Enable retries and run test_bulk_delete_images_all_params.
+        _service.enable_retries()
+        self.test_bulk_delete_images_all_params()
+
+        # Disable retries and run test_bulk_delete_images_all_params.
+        _service.disable_retries()
+        self.test_bulk_delete_images_all_params()
 
     @responses.activate
     def test_bulk_delete_images_value_error(self):
@@ -342,13 +526,15 @@ class TestBulkDeleteImages():
         test_bulk_delete_images_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/bulkdelete')
+        url = preprocess_url('/api/v1/images/bulkdelete')
         mock_response = '{"error": {"mapKey": {"code": "code", "message": "message"}}, "success": ["success"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         bulk_delete = ['us.icr.io/birds/woodpecker@sha256:38f97dd92769b18ca82ad9ab6667af47306e66fea5b446937eea68b10ab4bbbb', 'us.icr.io/birds/bird@sha256:38f97dd92769b18ca82ad9ab6667af47306e66fea5b446937eea68b10ab4dddd']
@@ -358,25 +544,24 @@ class TestBulkDeleteImages():
             "bulk_delete": bulk_delete,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.bulk_delete_images(**req_copy)
+                _service.bulk_delete_images(**req_copy)
+
+    def test_bulk_delete_images_value_error_with_retries(self):
+        # Enable retries and run test_bulk_delete_images_value_error.
+        _service.enable_retries()
+        self.test_bulk_delete_images_value_error()
+
+        # Disable retries and run test_bulk_delete_images_value_error.
+        _service.disable_retries()
+        self.test_bulk_delete_images_value_error()
 
 
-
-class TestListImageDigests():
+class TestListImageDigests:
     """
     Test Class for list_image_digests
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_image_digests_all_params(self):
@@ -384,13 +569,15 @@ class TestListImageDigests():
         list_image_digests()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/digests')
+        url = preprocess_url('/api/v1/images/digests')
         mock_response = '[{"created": 7, "id": "id", "manifestType": "manifest_type", "repoTags": {"mapKey": {"mapKey": {"configurationIssueCount": 25, "exemptIssueCount": 18, "issueCount": 11, "vulnerabilityCount": 19, "vulnerable": "vulnerable"}}}, "size": 4}]'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         exclude_tagged = False
@@ -399,12 +586,12 @@ class TestListImageDigests():
         repositories = ['testString']
 
         # Invoke method
-        response = service.list_image_digests(
+        response = _service.list_image_digests(
             exclude_tagged=exclude_tagged,
             exclude_va=exclude_va,
             include_ibm=include_ibm,
             repositories=repositories,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -417,6 +604,14 @@ class TestListImageDigests():
         assert req_body['include_ibm'] == False
         assert req_body['repositories'] == ['testString']
 
+    def test_list_image_digests_all_params_with_retries(self):
+        # Enable retries and run test_list_image_digests_all_params.
+        _service.enable_retries()
+        self.test_list_image_digests_all_params()
+
+        # Disable retries and run test_list_image_digests_all_params.
+        _service.disable_retries()
+        self.test_list_image_digests_all_params()
 
     @responses.activate
     def test_list_image_digests_value_error(self):
@@ -424,13 +619,15 @@ class TestListImageDigests():
         test_list_image_digests_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/digests')
+        url = preprocess_url('/api/v1/images/digests')
         mock_response = '[{"created": 7, "id": "id", "manifestType": "manifest_type", "repoTags": {"mapKey": {"mapKey": {"configurationIssueCount": 25, "exemptIssueCount": 18, "issueCount": 11, "vulnerabilityCount": 19, "vulnerable": "vulnerable"}}}, "size": 4}]'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         exclude_tagged = False
@@ -442,25 +639,24 @@ class TestListImageDigests():
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_image_digests(**req_copy)
+                _service.list_image_digests(**req_copy)
+
+    def test_list_image_digests_value_error_with_retries(self):
+        # Enable retries and run test_list_image_digests_value_error.
+        _service.enable_retries()
+        self.test_list_image_digests_value_error()
+
+        # Disable retries and run test_list_image_digests_value_error.
+        _service.disable_retries()
+        self.test_list_image_digests_value_error()
 
 
-
-class TestTagImage():
+class TestTagImage:
     """
     Test Class for tag_image
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_tag_image_all_params(self):
@@ -468,31 +664,41 @@ class TestTagImage():
         tag_image()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/tags')
-        responses.add(responses.POST,
-                      url,
-                      status=201)
+        url = preprocess_url('/api/v1/images/tags')
+        responses.add(
+            responses.POST,
+            url,
+            status=201,
+        )
 
         # Set up parameter values
         fromimage = 'testString'
         toimage = 'testString'
 
         # Invoke method
-        response = service.tag_image(
+        response = _service.tag_image(
             fromimage,
             toimage,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 201
         # Validate query params
-        query_string = responses.calls[0].request.url.split('?',1)[1]
+        query_string = responses.calls[0].request.url.split('?', 1)[1]
         query_string = urllib.parse.unquote_plus(query_string)
         assert 'fromimage={}'.format(fromimage) in query_string
         assert 'toimage={}'.format(toimage) in query_string
 
+    def test_tag_image_all_params_with_retries(self):
+        # Enable retries and run test_tag_image_all_params.
+        _service.enable_retries()
+        self.test_tag_image_all_params()
+
+        # Disable retries and run test_tag_image_all_params.
+        _service.disable_retries()
+        self.test_tag_image_all_params()
 
     @responses.activate
     def test_tag_image_value_error(self):
@@ -500,10 +706,12 @@ class TestTagImage():
         test_tag_image_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/tags')
-        responses.add(responses.POST,
-                      url,
-                      status=201)
+        url = preprocess_url('/api/v1/images/tags')
+        responses.add(
+            responses.POST,
+            url,
+            status=201,
+        )
 
         # Set up parameter values
         fromimage = 'testString'
@@ -515,25 +723,24 @@ class TestTagImage():
             "toimage": toimage,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.tag_image(**req_copy)
+                _service.tag_image(**req_copy)
+
+    def test_tag_image_value_error_with_retries(self):
+        # Enable retries and run test_tag_image_value_error.
+        _service.enable_retries()
+        self.test_tag_image_value_error()
+
+        # Disable retries and run test_tag_image_value_error.
+        _service.disable_retries()
+        self.test_tag_image_value_error()
 
 
-
-class TestDeleteImage():
+class TestDeleteImage:
     """
     Test Class for delete_image
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_delete_image_all_params(self):
@@ -541,27 +748,37 @@ class TestDeleteImage():
         delete_image()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString')
+        url = preprocess_url('/api/v1/images/testString')
         mock_response = '{"Untagged": "untagged"}'
-        responses.add(responses.DELETE,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.DELETE,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
 
         # Invoke method
-        response = service.delete_image(
+        response = _service.delete_image(
             image,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_delete_image_all_params_with_retries(self):
+        # Enable retries and run test_delete_image_all_params.
+        _service.enable_retries()
+        self.test_delete_image_all_params()
+
+        # Disable retries and run test_delete_image_all_params.
+        _service.disable_retries()
+        self.test_delete_image_all_params()
 
     @responses.activate
     def test_delete_image_value_error(self):
@@ -569,13 +786,15 @@ class TestDeleteImage():
         test_delete_image_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString')
+        url = preprocess_url('/api/v1/images/testString')
         mock_response = '{"Untagged": "untagged"}'
-        responses.add(responses.DELETE,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.DELETE,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
@@ -585,25 +804,24 @@ class TestDeleteImage():
             "image": image,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.delete_image(**req_copy)
+                _service.delete_image(**req_copy)
+
+    def test_delete_image_value_error_with_retries(self):
+        # Enable retries and run test_delete_image_value_error.
+        _service.enable_retries()
+        self.test_delete_image_value_error()
+
+        # Disable retries and run test_delete_image_value_error.
+        _service.disable_retries()
+        self.test_delete_image_value_error()
 
 
-
-class TestInspectImage():
+class TestInspectImage:
     """
     Test Class for inspect_image
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_inspect_image_all_params(self):
@@ -611,27 +829,37 @@ class TestInspectImage():
         inspect_image()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString/json')
-        mock_response = '{"Architecture": "architecture", "Author": "author", "Comment": "comment", "Config": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"mapKey": {"anyKey": "anyValue"}}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"mapKey": {"anyKey": "anyValue"}}, "WorkingDir": "working_dir"}, "Container": "container", "ContainerConfig": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"mapKey": {"anyKey": "anyValue"}}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"mapKey": {"anyKey": "anyValue"}}, "WorkingDir": "working_dir"}, "Created": "created", "DockerVersion": "docker_version", "Id": "id", "ManifestType": "manifest_type", "Os": "os", "OsVersion": "os_version", "Parent": "parent", "RootFS": {"BaseLayer": "base_layer", "Layers": ["layers"], "Type": "type"}, "Size": 4, "VirtualSize": 12}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        url = preprocess_url('/api/v1/images/testString/json')
+        mock_response = '{"Architecture": "architecture", "Author": "author", "Comment": "comment", "Config": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"anyKey": "anyValue"}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"anyKey": "anyValue"}, "WorkingDir": "working_dir"}, "Container": "container", "ContainerConfig": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"anyKey": "anyValue"}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"anyKey": "anyValue"}, "WorkingDir": "working_dir"}, "Created": "created", "DockerVersion": "docker_version", "Id": "id", "ManifestType": "manifest_type", "Os": "os", "OsVersion": "os_version", "Parent": "parent", "RootFS": {"BaseLayer": "base_layer", "Layers": ["layers"], "Type": "type"}, "Size": 4, "VirtualSize": 12}'
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
 
         # Invoke method
-        response = service.inspect_image(
+        response = _service.inspect_image(
             image,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_inspect_image_all_params_with_retries(self):
+        # Enable retries and run test_inspect_image_all_params.
+        _service.enable_retries()
+        self.test_inspect_image_all_params()
+
+        # Disable retries and run test_inspect_image_all_params.
+        _service.disable_retries()
+        self.test_inspect_image_all_params()
 
     @responses.activate
     def test_inspect_image_value_error(self):
@@ -639,13 +867,15 @@ class TestInspectImage():
         test_inspect_image_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString/json')
-        mock_response = '{"Architecture": "architecture", "Author": "author", "Comment": "comment", "Config": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"mapKey": {"anyKey": "anyValue"}}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"mapKey": {"anyKey": "anyValue"}}, "WorkingDir": "working_dir"}, "Container": "container", "ContainerConfig": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"mapKey": {"anyKey": "anyValue"}}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"mapKey": {"anyKey": "anyValue"}}, "WorkingDir": "working_dir"}, "Created": "created", "DockerVersion": "docker_version", "Id": "id", "ManifestType": "manifest_type", "Os": "os", "OsVersion": "os_version", "Parent": "parent", "RootFS": {"BaseLayer": "base_layer", "Layers": ["layers"], "Type": "type"}, "Size": 4, "VirtualSize": 12}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        url = preprocess_url('/api/v1/images/testString/json')
+        mock_response = '{"Architecture": "architecture", "Author": "author", "Comment": "comment", "Config": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"anyKey": "anyValue"}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"anyKey": "anyValue"}, "WorkingDir": "working_dir"}, "Container": "container", "ContainerConfig": {"ArgsEscaped": true, "AttachStderr": false, "AttachStdin": true, "AttachStdout": false, "Cmd": ["cmd"], "Domainname": "domainname", "Entrypoint": ["entrypoint"], "Env": ["env"], "ExposedPorts": {"anyKey": "anyValue"}, "Healthcheck": {"Interval": 8, "Retries": 7, "Test": ["test"], "Timeout": 7}, "Hostname": "hostname", "Image": "image", "Labels": {"mapKey": "inner"}, "MacAddress": "mac_address", "NetworkDisabled": true, "OnBuild": ["on_build"], "OpenStdin": true, "Shell": ["shell"], "StdinOnce": true, "StopSignal": "stop_signal", "StopTimeout": 12, "Tty": false, "User": "user", "Volumes": {"anyKey": "anyValue"}, "WorkingDir": "working_dir"}, "Created": "created", "DockerVersion": "docker_version", "Id": "id", "ManifestType": "manifest_type", "Os": "os", "OsVersion": "os_version", "Parent": "parent", "RootFS": {"BaseLayer": "base_layer", "Layers": ["layers"], "Type": "type"}, "Size": 4, "VirtualSize": 12}'
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
@@ -655,25 +885,24 @@ class TestInspectImage():
             "image": image,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.inspect_image(**req_copy)
+                _service.inspect_image(**req_copy)
+
+    def test_inspect_image_value_error_with_retries(self):
+        # Enable retries and run test_inspect_image_value_error.
+        _service.enable_retries()
+        self.test_inspect_image_value_error()
+
+        # Disable retries and run test_inspect_image_value_error.
+        _service.disable_retries()
+        self.test_inspect_image_value_error()
 
 
-
-class TestGetImageManifest():
+class TestGetImageManifest:
     """
     Test Class for get_image_manifest
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_image_manifest_all_params(self):
@@ -681,27 +910,37 @@ class TestGetImageManifest():
         get_image_manifest()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString/manifest')
-        mock_response = '{"mapKey": {"anyKey": "anyValue"}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        url = preprocess_url('/api/v1/images/testString/manifest')
+        mock_response = '{"anyKey": "anyValue"}'
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
 
         # Invoke method
-        response = service.get_image_manifest(
+        response = _service.get_image_manifest(
             image,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_image_manifest_all_params_with_retries(self):
+        # Enable retries and run test_get_image_manifest_all_params.
+        _service.enable_retries()
+        self.test_get_image_manifest_all_params()
+
+        # Disable retries and run test_get_image_manifest_all_params.
+        _service.disable_retries()
+        self.test_get_image_manifest_all_params()
 
     @responses.activate
     def test_get_image_manifest_value_error(self):
@@ -709,13 +948,15 @@ class TestGetImageManifest():
         test_get_image_manifest_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/images/testString/manifest')
-        mock_response = '{"mapKey": {"anyKey": "anyValue"}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        url = preprocess_url('/api/v1/images/testString/manifest')
+        mock_response = '{"anyKey": "anyValue"}'
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
@@ -725,10 +966,18 @@ class TestGetImageManifest():
             "image": image,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_image_manifest(**req_copy)
+                _service.get_image_manifest(**req_copy)
 
+    def test_get_image_manifest_value_error_with_retries(self):
+        # Enable retries and run test_get_image_manifest_value_error.
+        _service.enable_retries()
+        self.test_get_image_manifest_value_error()
+
+        # Disable retries and run test_get_image_manifest_value_error.
+        _service.disable_retries()
+        self.test_get_image_manifest_value_error()
 
 
 # endregion
@@ -741,19 +990,57 @@ class TestGetImageManifest():
 ##############################################################################
 # region
 
-class TestGetMessages():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestGetMessages:
     """
     Test Class for get_messages
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_messages_all_params(self):
@@ -761,21 +1048,31 @@ class TestGetMessages():
         get_messages()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/messages')
-        mock_response = '"operation_response"'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        url = preprocess_url('/api/v1/messages')
+        mock_response = '"Hello, world!"'
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.get_messages()
-
+        response = _service.get_messages()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
+
+    def test_get_messages_all_params_with_retries(self):
+        # Enable retries and run test_get_messages_all_params.
+        _service.enable_retries()
+        self.test_get_messages_all_params()
+
+        # Disable retries and run test_get_messages_all_params.
+        _service.disable_retries()
+        self.test_get_messages_all_params()
 
 
 # endregion
@@ -788,19 +1085,57 @@ class TestGetMessages():
 ##############################################################################
 # region
 
-class TestListNamespaces():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestListNamespaces:
     """
     Test Class for list_namespaces
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_namespaces_all_params(self):
@@ -808,22 +1143,31 @@ class TestListNamespaces():
         list_namespaces()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces')
+        url = preprocess_url('/api/v1/namespaces')
         mock_response = '["operation_response"]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.list_namespaces()
-
+        response = _service.list_namespaces()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_list_namespaces_all_params_with_retries(self):
+        # Enable retries and run test_list_namespaces_all_params.
+        _service.enable_retries()
+        self.test_list_namespaces_all_params()
+
+        # Disable retries and run test_list_namespaces_all_params.
+        _service.disable_retries()
+        self.test_list_namespaces_all_params()
 
     @responses.activate
     def test_list_namespaces_value_error(self):
@@ -831,37 +1175,38 @@ class TestListNamespaces():
         test_list_namespaces_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces')
+        url = preprocess_url('/api/v1/namespaces')
         mock_response = '["operation_response"]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_namespaces(**req_copy)
+                _service.list_namespaces(**req_copy)
+
+    def test_list_namespaces_value_error_with_retries(self):
+        # Enable retries and run test_list_namespaces_value_error.
+        _service.enable_retries()
+        self.test_list_namespaces_value_error()
+
+        # Disable retries and run test_list_namespaces_value_error.
+        _service.disable_retries()
+        self.test_list_namespaces_value_error()
 
 
-
-class TestListNamespaceDetails():
+class TestListNamespaceDetails:
     """
     Test Class for list_namespace_details
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_namespace_details_all_params(self):
@@ -869,22 +1214,31 @@ class TestListNamespaceDetails():
         list_namespace_details()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/details')
+        url = preprocess_url('/api/v1/namespaces/details')
         mock_response = '[{"account": "account", "created_date": "created_date", "crn": "crn", "name": "name", "resource_created_date": "resource_created_date", "resource_group": "resource_group", "updated_date": "updated_date"}]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.list_namespace_details()
-
+        response = _service.list_namespace_details()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_list_namespace_details_all_params_with_retries(self):
+        # Enable retries and run test_list_namespace_details_all_params.
+        _service.enable_retries()
+        self.test_list_namespace_details_all_params()
+
+        # Disable retries and run test_list_namespace_details_all_params.
+        _service.disable_retries()
+        self.test_list_namespace_details_all_params()
 
     @responses.activate
     def test_list_namespace_details_value_error(self):
@@ -892,37 +1246,38 @@ class TestListNamespaceDetails():
         test_list_namespace_details_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/details')
+        url = preprocess_url('/api/v1/namespaces/details')
         mock_response = '[{"account": "account", "created_date": "created_date", "crn": "crn", "name": "name", "resource_created_date": "resource_created_date", "resource_group": "resource_group", "updated_date": "updated_date"}]'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_namespace_details(**req_copy)
+                _service.list_namespace_details(**req_copy)
+
+    def test_list_namespace_details_value_error_with_retries(self):
+        # Enable retries and run test_list_namespace_details_value_error.
+        _service.enable_retries()
+        self.test_list_namespace_details_value_error()
+
+        # Disable retries and run test_list_namespace_details_value_error.
+        _service.disable_retries()
+        self.test_list_namespace_details_value_error()
 
 
-
-class TestCreateNamespace():
+class TestCreateNamespace:
     """
     Test Class for create_namespace
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_create_namespace_all_params(self):
@@ -930,29 +1285,39 @@ class TestCreateNamespace():
         create_namespace()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
+        url = preprocess_url('/api/v1/namespaces/testString')
         mock_response = '{"namespace": "namespace"}'
-        responses.add(responses.PUT,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.PUT,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         name = 'testString'
         x_auth_resource_group = 'testString'
 
         # Invoke method
-        response = service.create_namespace(
+        response = _service.create_namespace(
             name,
             x_auth_resource_group=x_auth_resource_group,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_create_namespace_all_params_with_retries(self):
+        # Enable retries and run test_create_namespace_all_params.
+        _service.enable_retries()
+        self.test_create_namespace_all_params()
+
+        # Disable retries and run test_create_namespace_all_params.
+        _service.disable_retries()
+        self.test_create_namespace_all_params()
 
     @responses.activate
     def test_create_namespace_required_params(self):
@@ -960,27 +1325,37 @@ class TestCreateNamespace():
         test_create_namespace_required_params()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
+        url = preprocess_url('/api/v1/namespaces/testString')
         mock_response = '{"namespace": "namespace"}'
-        responses.add(responses.PUT,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.PUT,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         name = 'testString'
 
         # Invoke method
-        response = service.create_namespace(
+        response = _service.create_namespace(
             name,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_create_namespace_required_params_with_retries(self):
+        # Enable retries and run test_create_namespace_required_params.
+        _service.enable_retries()
+        self.test_create_namespace_required_params()
+
+        # Disable retries and run test_create_namespace_required_params.
+        _service.disable_retries()
+        self.test_create_namespace_required_params()
 
     @responses.activate
     def test_create_namespace_value_error(self):
@@ -988,13 +1363,15 @@ class TestCreateNamespace():
         test_create_namespace_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
+        url = preprocess_url('/api/v1/namespaces/testString')
         mock_response = '{"namespace": "namespace"}'
-        responses.add(responses.PUT,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.PUT,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         name = 'testString'
@@ -1004,25 +1381,24 @@ class TestCreateNamespace():
             "name": name,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.create_namespace(**req_copy)
+                _service.create_namespace(**req_copy)
+
+    def test_create_namespace_value_error_with_retries(self):
+        # Enable retries and run test_create_namespace_value_error.
+        _service.enable_retries()
+        self.test_create_namespace_value_error()
+
+        # Disable retries and run test_create_namespace_value_error.
+        _service.disable_retries()
+        self.test_create_namespace_value_error()
 
 
-
-class TestAssignNamespace():
+class TestAssignNamespace:
     """
     Test Class for assign_namespace
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_assign_namespace_all_params(self):
@@ -1030,29 +1406,39 @@ class TestAssignNamespace():
         assign_namespace()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
+        url = preprocess_url('/api/v1/namespaces/testString')
         mock_response = '{"namespace": "namespace"}'
-        responses.add(responses.PATCH,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.PATCH,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         x_auth_resource_group = 'testString'
         name = 'testString'
 
         # Invoke method
-        response = service.assign_namespace(
+        response = _service.assign_namespace(
             x_auth_resource_group,
             name,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_assign_namespace_all_params_with_retries(self):
+        # Enable retries and run test_assign_namespace_all_params.
+        _service.enable_retries()
+        self.test_assign_namespace_all_params()
+
+        # Disable retries and run test_assign_namespace_all_params.
+        _service.disable_retries()
+        self.test_assign_namespace_all_params()
 
     @responses.activate
     def test_assign_namespace_value_error(self):
@@ -1060,13 +1446,15 @@ class TestAssignNamespace():
         test_assign_namespace_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
+        url = preprocess_url('/api/v1/namespaces/testString')
         mock_response = '{"namespace": "namespace"}'
-        responses.add(responses.PATCH,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.PATCH,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         x_auth_resource_group = 'testString'
@@ -1078,25 +1466,24 @@ class TestAssignNamespace():
             "name": name,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.assign_namespace(**req_copy)
+                _service.assign_namespace(**req_copy)
+
+    def test_assign_namespace_value_error_with_retries(self):
+        # Enable retries and run test_assign_namespace_value_error.
+        _service.enable_retries()
+        self.test_assign_namespace_value_error()
+
+        # Disable retries and run test_assign_namespace_value_error.
+        _service.disable_retries()
+        self.test_assign_namespace_value_error()
 
 
-
-class TestDeleteNamespace():
+class TestDeleteNamespace:
     """
     Test Class for delete_namespace
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_delete_namespace_all_params(self):
@@ -1104,24 +1491,34 @@ class TestDeleteNamespace():
         delete_namespace()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
-        responses.add(responses.DELETE,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/namespaces/testString')
+        responses.add(
+            responses.DELETE,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         name = 'testString'
 
         # Invoke method
-        response = service.delete_namespace(
+        response = _service.delete_namespace(
             name,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 204
 
+    def test_delete_namespace_all_params_with_retries(self):
+        # Enable retries and run test_delete_namespace_all_params.
+        _service.enable_retries()
+        self.test_delete_namespace_all_params()
+
+        # Disable retries and run test_delete_namespace_all_params.
+        _service.disable_retries()
+        self.test_delete_namespace_all_params()
 
     @responses.activate
     def test_delete_namespace_value_error(self):
@@ -1129,10 +1526,12 @@ class TestDeleteNamespace():
         test_delete_namespace_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/namespaces/testString')
-        responses.add(responses.DELETE,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/namespaces/testString')
+        responses.add(
+            responses.DELETE,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         name = 'testString'
@@ -1142,10 +1541,18 @@ class TestDeleteNamespace():
             "name": name,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.delete_namespace(**req_copy)
+                _service.delete_namespace(**req_copy)
 
+    def test_delete_namespace_value_error_with_retries(self):
+        # Enable retries and run test_delete_namespace_value_error.
+        _service.enable_retries()
+        self.test_delete_namespace_value_error()
+
+        # Disable retries and run test_delete_namespace_value_error.
+        _service.disable_retries()
+        self.test_delete_namespace_value_error()
 
 
 # endregion
@@ -1158,19 +1565,57 @@ class TestDeleteNamespace():
 ##############################################################################
 # region
 
-class TestGetPlans():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestGetPlans:
     """
     Test Class for get_plans
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_plans_all_params(self):
@@ -1178,22 +1623,31 @@ class TestGetPlans():
         get_plans()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/plans')
+        url = preprocess_url('/api/v1/plans')
         mock_response = '{"plan": "plan"}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.get_plans()
-
+        response = _service.get_plans()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_plans_all_params_with_retries(self):
+        # Enable retries and run test_get_plans_all_params.
+        _service.enable_retries()
+        self.test_get_plans_all_params()
+
+        # Disable retries and run test_get_plans_all_params.
+        _service.disable_retries()
+        self.test_get_plans_all_params()
 
     @responses.activate
     def test_get_plans_value_error(self):
@@ -1201,37 +1655,38 @@ class TestGetPlans():
         test_get_plans_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/plans')
+        url = preprocess_url('/api/v1/plans')
         mock_response = '{"plan": "plan"}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_plans(**req_copy)
+                _service.get_plans(**req_copy)
+
+    def test_get_plans_value_error_with_retries(self):
+        # Enable retries and run test_get_plans_value_error.
+        _service.enable_retries()
+        self.test_get_plans_value_error()
+
+        # Disable retries and run test_get_plans_value_error.
+        _service.disable_retries()
+        self.test_get_plans_value_error()
 
 
-
-class TestUpdatePlans():
+class TestUpdatePlans:
     """
     Test Class for update_plans
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_update_plans_all_params(self):
@@ -1239,18 +1694,20 @@ class TestUpdatePlans():
         update_plans()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/plans')
-        responses.add(responses.PATCH,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/plans')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         plan = 'Standard'
 
         # Invoke method
-        response = service.update_plans(
+        response = _service.update_plans(
             plan=plan,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -1260,6 +1717,14 @@ class TestUpdatePlans():
         req_body = json.loads(str(responses.calls[0].request.body, 'utf-8'))
         assert req_body['plan'] == 'Standard'
 
+    def test_update_plans_all_params_with_retries(self):
+        # Enable retries and run test_update_plans_all_params.
+        _service.enable_retries()
+        self.test_update_plans_all_params()
+
+        # Disable retries and run test_update_plans_all_params.
+        _service.disable_retries()
+        self.test_update_plans_all_params()
 
     @responses.activate
     def test_update_plans_value_error(self):
@@ -1267,10 +1732,12 @@ class TestUpdatePlans():
         test_update_plans_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/plans')
-        responses.add(responses.PATCH,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/plans')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         plan = 'Standard'
@@ -1279,10 +1746,18 @@ class TestUpdatePlans():
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.update_plans(**req_copy)
+                _service.update_plans(**req_copy)
 
+    def test_update_plans_value_error_with_retries(self):
+        # Enable retries and run test_update_plans_value_error.
+        _service.enable_retries()
+        self.test_update_plans_value_error()
+
+        # Disable retries and run test_update_plans_value_error.
+        _service.disable_retries()
+        self.test_update_plans_value_error()
 
 
 # endregion
@@ -1295,19 +1770,57 @@ class TestUpdatePlans():
 ##############################################################################
 # region
 
-class TestGetQuota():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestGetQuota:
     """
     Test Class for get_quota
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_quota_all_params(self):
@@ -1315,22 +1828,31 @@ class TestGetQuota():
         get_quota()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/quotas')
+        url = preprocess_url('/api/v1/quotas')
         mock_response = '{"limit": {"storage_bytes": 13, "traffic_bytes": 13}, "usage": {"storage_bytes": 13, "traffic_bytes": 13}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.get_quota()
-
+        response = _service.get_quota()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_quota_all_params_with_retries(self):
+        # Enable retries and run test_get_quota_all_params.
+        _service.enable_retries()
+        self.test_get_quota_all_params()
+
+        # Disable retries and run test_get_quota_all_params.
+        _service.disable_retries()
+        self.test_get_quota_all_params()
 
     @responses.activate
     def test_get_quota_value_error(self):
@@ -1338,37 +1860,38 @@ class TestGetQuota():
         test_get_quota_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/quotas')
+        url = preprocess_url('/api/v1/quotas')
         mock_response = '{"limit": {"storage_bytes": 13, "traffic_bytes": 13}, "usage": {"storage_bytes": 13, "traffic_bytes": 13}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_quota(**req_copy)
+                _service.get_quota(**req_copy)
+
+    def test_get_quota_value_error_with_retries(self):
+        # Enable retries and run test_get_quota_value_error.
+        _service.enable_retries()
+        self.test_get_quota_value_error()
+
+        # Disable retries and run test_get_quota_value_error.
+        _service.disable_retries()
+        self.test_get_quota_value_error()
 
 
-
-class TestUpdateQuota():
+class TestUpdateQuota:
     """
     Test Class for update_quota
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_update_quota_all_params(self):
@@ -1376,20 +1899,22 @@ class TestUpdateQuota():
         update_quota()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/quotas')
-        responses.add(responses.PATCH,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/quotas')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         storage_megabytes = 26
         traffic_megabytes = 480
 
         # Invoke method
-        response = service.update_quota(
+        response = _service.update_quota(
             storage_megabytes=storage_megabytes,
             traffic_megabytes=traffic_megabytes,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -1400,6 +1925,14 @@ class TestUpdateQuota():
         assert req_body['storage_megabytes'] == 26
         assert req_body['traffic_megabytes'] == 480
 
+    def test_update_quota_all_params_with_retries(self):
+        # Enable retries and run test_update_quota_all_params.
+        _service.enable_retries()
+        self.test_update_quota_all_params()
+
+        # Disable retries and run test_update_quota_all_params.
+        _service.disable_retries()
+        self.test_update_quota_all_params()
 
     @responses.activate
     def test_update_quota_value_error(self):
@@ -1407,10 +1940,12 @@ class TestUpdateQuota():
         test_update_quota_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/quotas')
-        responses.add(responses.PATCH,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/quotas')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         storage_megabytes = 26
@@ -1420,10 +1955,18 @@ class TestUpdateQuota():
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.update_quota(**req_copy)
+                _service.update_quota(**req_copy)
 
+    def test_update_quota_value_error_with_retries(self):
+        # Enable retries and run test_update_quota_value_error.
+        _service.enable_retries()
+        self.test_update_quota_value_error()
+
+        # Disable retries and run test_update_quota_value_error.
+        _service.disable_retries()
+        self.test_update_quota_value_error()
 
 
 # endregion
@@ -1436,19 +1979,57 @@ class TestUpdateQuota():
 ##############################################################################
 # region
 
-class TestListRetentionPolicies():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestListRetentionPolicies:
     """
     Test Class for list_retention_policies
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_retention_policies_all_params(self):
@@ -1456,22 +2037,31 @@ class TestListRetentionPolicies():
         list_retention_policies()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions')
+        url = preprocess_url('/api/v1/retentions')
         mock_response = '{"mapKey": {"images_per_repo": 15, "namespace": "namespace", "retain_untagged": false}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.list_retention_policies()
-
+        response = _service.list_retention_policies()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_list_retention_policies_all_params_with_retries(self):
+        # Enable retries and run test_list_retention_policies_all_params.
+        _service.enable_retries()
+        self.test_list_retention_policies_all_params()
+
+        # Disable retries and run test_list_retention_policies_all_params.
+        _service.disable_retries()
+        self.test_list_retention_policies_all_params()
 
     @responses.activate
     def test_list_retention_policies_value_error(self):
@@ -1479,37 +2069,38 @@ class TestListRetentionPolicies():
         test_list_retention_policies_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions')
+        url = preprocess_url('/api/v1/retentions')
         mock_response = '{"mapKey": {"images_per_repo": 15, "namespace": "namespace", "retain_untagged": false}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_retention_policies(**req_copy)
+                _service.list_retention_policies(**req_copy)
+
+    def test_list_retention_policies_value_error_with_retries(self):
+        # Enable retries and run test_list_retention_policies_value_error.
+        _service.enable_retries()
+        self.test_list_retention_policies_value_error()
+
+        # Disable retries and run test_list_retention_policies_value_error.
+        _service.disable_retries()
+        self.test_list_retention_policies_value_error()
 
 
-
-class TestSetRetentionPolicy():
+class TestSetRetentionPolicy:
     """
     Test Class for set_retention_policy
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_set_retention_policy_all_params(self):
@@ -1517,10 +2108,12 @@ class TestSetRetentionPolicy():
         set_retention_policy()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions')
-        responses.add(responses.POST,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/retentions')
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'birds'
@@ -1528,11 +2121,11 @@ class TestSetRetentionPolicy():
         retain_untagged = False
 
         # Invoke method
-        response = service.set_retention_policy(
+        response = _service.set_retention_policy(
             namespace,
             images_per_repo=images_per_repo,
             retain_untagged=retain_untagged,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -1544,6 +2137,14 @@ class TestSetRetentionPolicy():
         assert req_body['images_per_repo'] == 10
         assert req_body['retain_untagged'] == False
 
+    def test_set_retention_policy_all_params_with_retries(self):
+        # Enable retries and run test_set_retention_policy_all_params.
+        _service.enable_retries()
+        self.test_set_retention_policy_all_params()
+
+        # Disable retries and run test_set_retention_policy_all_params.
+        _service.disable_retries()
+        self.test_set_retention_policy_all_params()
 
     @responses.activate
     def test_set_retention_policy_value_error(self):
@@ -1551,10 +2152,12 @@ class TestSetRetentionPolicy():
         test_set_retention_policy_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions')
-        responses.add(responses.POST,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/retentions')
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'birds'
@@ -1566,25 +2169,24 @@ class TestSetRetentionPolicy():
             "namespace": namespace,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.set_retention_policy(**req_copy)
+                _service.set_retention_policy(**req_copy)
+
+    def test_set_retention_policy_value_error_with_retries(self):
+        # Enable retries and run test_set_retention_policy_value_error.
+        _service.enable_retries()
+        self.test_set_retention_policy_value_error()
+
+        # Disable retries and run test_set_retention_policy_value_error.
+        _service.disable_retries()
+        self.test_set_retention_policy_value_error()
 
 
-
-class TestAnalyzeRetentionPolicy():
+class TestAnalyzeRetentionPolicy:
     """
     Test Class for analyze_retention_policy
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_analyze_retention_policy_all_params(self):
@@ -1592,13 +2194,15 @@ class TestAnalyzeRetentionPolicy():
         analyze_retention_policy()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions/analyze')
+        url = preprocess_url('/api/v1/retentions/analyze')
         mock_response = '{"mapKey": ["inner"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'birds'
@@ -1606,11 +2210,11 @@ class TestAnalyzeRetentionPolicy():
         retain_untagged = False
 
         # Invoke method
-        response = service.analyze_retention_policy(
+        response = _service.analyze_retention_policy(
             namespace,
             images_per_repo=images_per_repo,
             retain_untagged=retain_untagged,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -1622,6 +2226,14 @@ class TestAnalyzeRetentionPolicy():
         assert req_body['images_per_repo'] == 10
         assert req_body['retain_untagged'] == False
 
+    def test_analyze_retention_policy_all_params_with_retries(self):
+        # Enable retries and run test_analyze_retention_policy_all_params.
+        _service.enable_retries()
+        self.test_analyze_retention_policy_all_params()
+
+        # Disable retries and run test_analyze_retention_policy_all_params.
+        _service.disable_retries()
+        self.test_analyze_retention_policy_all_params()
 
     @responses.activate
     def test_analyze_retention_policy_value_error(self):
@@ -1629,13 +2241,15 @@ class TestAnalyzeRetentionPolicy():
         test_analyze_retention_policy_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions/analyze')
+        url = preprocess_url('/api/v1/retentions/analyze')
         mock_response = '{"mapKey": ["inner"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'birds'
@@ -1647,25 +2261,24 @@ class TestAnalyzeRetentionPolicy():
             "namespace": namespace,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.analyze_retention_policy(**req_copy)
+                _service.analyze_retention_policy(**req_copy)
+
+    def test_analyze_retention_policy_value_error_with_retries(self):
+        # Enable retries and run test_analyze_retention_policy_value_error.
+        _service.enable_retries()
+        self.test_analyze_retention_policy_value_error()
+
+        # Disable retries and run test_analyze_retention_policy_value_error.
+        _service.disable_retries()
+        self.test_analyze_retention_policy_value_error()
 
 
-
-class TestGetRetentionPolicy():
+class TestGetRetentionPolicy:
     """
     Test Class for get_retention_policy
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_retention_policy_all_params(self):
@@ -1673,27 +2286,37 @@ class TestGetRetentionPolicy():
         get_retention_policy()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions/testString')
+        url = preprocess_url('/api/v1/retentions/testString')
         mock_response = '{"images_per_repo": 15, "namespace": "namespace", "retain_untagged": false}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'testString'
 
         # Invoke method
-        response = service.get_retention_policy(
+        response = _service.get_retention_policy(
             namespace,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_retention_policy_all_params_with_retries(self):
+        # Enable retries and run test_get_retention_policy_all_params.
+        _service.enable_retries()
+        self.test_get_retention_policy_all_params()
+
+        # Disable retries and run test_get_retention_policy_all_params.
+        _service.disable_retries()
+        self.test_get_retention_policy_all_params()
 
     @responses.activate
     def test_get_retention_policy_value_error(self):
@@ -1701,13 +2324,15 @@ class TestGetRetentionPolicy():
         test_get_retention_policy_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/retentions/testString')
+        url = preprocess_url('/api/v1/retentions/testString')
         mock_response = '{"images_per_repo": 15, "namespace": "namespace", "retain_untagged": false}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'testString'
@@ -1717,10 +2342,18 @@ class TestGetRetentionPolicy():
             "namespace": namespace,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_retention_policy(**req_copy)
+                _service.get_retention_policy(**req_copy)
 
+    def test_get_retention_policy_value_error_with_retries(self):
+        # Enable retries and run test_get_retention_policy_value_error.
+        _service.enable_retries()
+        self.test_get_retention_policy_value_error()
+
+        # Disable retries and run test_get_retention_policy_value_error.
+        _service.disable_retries()
+        self.test_get_retention_policy_value_error()
 
 
 # endregion
@@ -1733,19 +2366,57 @@ class TestGetRetentionPolicy():
 ##############################################################################
 # region
 
-class TestGetSettings():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestGetSettings:
     """
     Test Class for get_settings
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_get_settings_all_params(self):
@@ -1753,22 +2424,31 @@ class TestGetSettings():
         get_settings()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/settings')
+        url = preprocess_url('/api/v1/settings')
         mock_response = '{"platform_metrics": true}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.get_settings()
-
+        response = _service.get_settings()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_get_settings_all_params_with_retries(self):
+        # Enable retries and run test_get_settings_all_params.
+        _service.enable_retries()
+        self.test_get_settings_all_params()
+
+        # Disable retries and run test_get_settings_all_params.
+        _service.disable_retries()
+        self.test_get_settings_all_params()
 
     @responses.activate
     def test_get_settings_value_error(self):
@@ -1776,37 +2456,38 @@ class TestGetSettings():
         test_get_settings_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/settings')
+        url = preprocess_url('/api/v1/settings')
         mock_response = '{"platform_metrics": true}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.get_settings(**req_copy)
+                _service.get_settings(**req_copy)
+
+    def test_get_settings_value_error_with_retries(self):
+        # Enable retries and run test_get_settings_value_error.
+        _service.enable_retries()
+        self.test_get_settings_value_error()
+
+        # Disable retries and run test_get_settings_value_error.
+        _service.disable_retries()
+        self.test_get_settings_value_error()
 
 
-
-class TestUpdateSettings():
+class TestUpdateSettings:
     """
     Test Class for update_settings
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_update_settings_all_params(self):
@@ -1814,18 +2495,20 @@ class TestUpdateSettings():
         update_settings()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/settings')
-        responses.add(responses.PATCH,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/settings')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         platform_metrics = True
 
         # Invoke method
-        response = service.update_settings(
+        response = _service.update_settings(
             platform_metrics=platform_metrics,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
@@ -1835,6 +2518,14 @@ class TestUpdateSettings():
         req_body = json.loads(str(responses.calls[0].request.body, 'utf-8'))
         assert req_body['platform_metrics'] == True
 
+    def test_update_settings_all_params_with_retries(self):
+        # Enable retries and run test_update_settings_all_params.
+        _service.enable_retries()
+        self.test_update_settings_all_params()
+
+        # Disable retries and run test_update_settings_all_params.
+        _service.disable_retries()
+        self.test_update_settings_all_params()
 
     @responses.activate
     def test_update_settings_value_error(self):
@@ -1842,10 +2533,12 @@ class TestUpdateSettings():
         test_update_settings_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/settings')
-        responses.add(responses.PATCH,
-                      url,
-                      status=204)
+        url = preprocess_url('/api/v1/settings')
+        responses.add(
+            responses.PATCH,
+            url,
+            status=204,
+        )
 
         # Set up parameter values
         platform_metrics = True
@@ -1854,10 +2547,18 @@ class TestUpdateSettings():
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.update_settings(**req_copy)
+                _service.update_settings(**req_copy)
 
+    def test_update_settings_value_error_with_retries(self):
+        # Enable retries and run test_update_settings_value_error.
+        _service.enable_retries()
+        self.test_update_settings_value_error()
+
+        # Disable retries and run test_update_settings_value_error.
+        _service.disable_retries()
+        self.test_update_settings_value_error()
 
 
 # endregion
@@ -1870,19 +2571,57 @@ class TestUpdateSettings():
 ##############################################################################
 # region
 
-class TestDeleteImageTag():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestDeleteImageTag:
     """
     Test Class for delete_image_tag
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_delete_image_tag_all_params(self):
@@ -1890,27 +2629,37 @@ class TestDeleteImageTag():
         delete_image_tag()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/tags/testString')
+        url = preprocess_url('/api/v1/tags/testString')
         mock_response = '{"Untagged": "untagged"}'
-        responses.add(responses.DELETE,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.DELETE,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
 
         # Invoke method
-        response = service.delete_image_tag(
+        response = _service.delete_image_tag(
             image,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_delete_image_tag_all_params_with_retries(self):
+        # Enable retries and run test_delete_image_tag_all_params.
+        _service.enable_retries()
+        self.test_delete_image_tag_all_params()
+
+        # Disable retries and run test_delete_image_tag_all_params.
+        _service.disable_retries()
+        self.test_delete_image_tag_all_params()
 
     @responses.activate
     def test_delete_image_tag_value_error(self):
@@ -1918,13 +2667,15 @@ class TestDeleteImageTag():
         test_delete_image_tag_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/tags/testString')
+        url = preprocess_url('/api/v1/tags/testString')
         mock_response = '{"Untagged": "untagged"}'
-        responses.add(responses.DELETE,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.DELETE,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
@@ -1934,10 +2685,18 @@ class TestDeleteImageTag():
             "image": image,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.delete_image_tag(**req_copy)
+                _service.delete_image_tag(**req_copy)
 
+    def test_delete_image_tag_value_error_with_retries(self):
+        # Enable retries and run test_delete_image_tag_value_error.
+        _service.enable_retries()
+        self.test_delete_image_tag_value_error()
+
+        # Disable retries and run test_delete_image_tag_value_error.
+        _service.disable_retries()
+        self.test_delete_image_tag_value_error()
 
 
 # endregion
@@ -1950,19 +2709,57 @@ class TestDeleteImageTag():
 ##############################################################################
 # region
 
-class TestListDeletedImages():
+
+class TestNewInstance:
+    """
+    Test Class for new_instance
+    """
+
+    def test_new_instance(self):
+        """
+        new_instance()
+        """
+        os.environ['TEST_SERVICE_AUTH_TYPE'] = 'noAuth'
+
+        service = ContainerRegistryV1.new_instance(
+            account=account,
+            service_name='TEST_SERVICE',
+        )
+
+        assert service is not None
+        assert isinstance(service, ContainerRegistryV1)
+
+    def test_new_instance_without_authenticator(self):
+        """
+        new_instance_without_authenticator()
+        """
+        with pytest.raises(ValueError, match='authenticator must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=account,
+                service_name='TEST_SERVICE_NOT_FOUND',
+            )
+
+    def test_new_instance_without_required_params(self):
+        """
+        new_instance_without_required_params()
+        """
+        with pytest.raises(TypeError, match='new_instance\\(\\) missing \\d required positional arguments?: \'.*\''):
+            service = ContainerRegistryV1.new_instance()
+
+    def test_new_instance_required_param_none(self):
+        """
+        new_instance_required_param_none()
+        """
+        with pytest.raises(ValueError, match='account must be provided'):
+            service = ContainerRegistryV1.new_instance(
+                account=None,
+            )
+
+
+class TestListDeletedImages:
     """
     Test Class for list_deleted_images
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_list_deleted_images_all_params(self):
@@ -1970,31 +2767,41 @@ class TestListDeletedImages():
         list_deleted_images()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash')
+        url = preprocess_url('/api/v1/trash')
         mock_response = '{"mapKey": {"daysUntilExpiry": 17, "tags": ["tags"]}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         namespace = 'testString'
 
         # Invoke method
-        response = service.list_deleted_images(
+        response = _service.list_deleted_images(
             namespace=namespace,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
         # Validate query params
-        query_string = responses.calls[0].request.url.split('?',1)[1]
+        query_string = responses.calls[0].request.url.split('?', 1)[1]
         query_string = urllib.parse.unquote_plus(query_string)
         assert 'namespace={}'.format(namespace) in query_string
 
+    def test_list_deleted_images_all_params_with_retries(self):
+        # Enable retries and run test_list_deleted_images_all_params.
+        _service.enable_retries()
+        self.test_list_deleted_images_all_params()
+
+        # Disable retries and run test_list_deleted_images_all_params.
+        _service.disable_retries()
+        self.test_list_deleted_images_all_params()
 
     @responses.activate
     def test_list_deleted_images_required_params(self):
@@ -2002,22 +2809,31 @@ class TestListDeletedImages():
         test_list_deleted_images_required_params()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash')
+        url = preprocess_url('/api/v1/trash')
         mock_response = '{"mapKey": {"daysUntilExpiry": 17, "tags": ["tags"]}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Invoke method
-        response = service.list_deleted_images()
-
+        response = _service.list_deleted_images()
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_list_deleted_images_required_params_with_retries(self):
+        # Enable retries and run test_list_deleted_images_required_params.
+        _service.enable_retries()
+        self.test_list_deleted_images_required_params()
+
+        # Disable retries and run test_list_deleted_images_required_params.
+        _service.disable_retries()
+        self.test_list_deleted_images_required_params()
 
     @responses.activate
     def test_list_deleted_images_value_error(self):
@@ -2025,37 +2841,38 @@ class TestListDeletedImages():
         test_list_deleted_images_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash')
+        url = preprocess_url('/api/v1/trash')
         mock_response = '{"mapKey": {"daysUntilExpiry": 17, "tags": ["tags"]}}'
-        responses.add(responses.GET,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.GET,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Pass in all but one required param and check for a ValueError
         req_param_dict = {
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.list_deleted_images(**req_copy)
+                _service.list_deleted_images(**req_copy)
+
+    def test_list_deleted_images_value_error_with_retries(self):
+        # Enable retries and run test_list_deleted_images_value_error.
+        _service.enable_retries()
+        self.test_list_deleted_images_value_error()
+
+        # Disable retries and run test_list_deleted_images_value_error.
+        _service.disable_retries()
+        self.test_list_deleted_images_value_error()
 
 
-
-class TestRestoreTags():
+class TestRestoreTags:
     """
     Test Class for restore_tags
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_restore_tags_all_params(self):
@@ -2063,27 +2880,37 @@ class TestRestoreTags():
         restore_tags()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash/testString/restoretags')
+        url = preprocess_url('/api/v1/trash/testString/restoretags')
         mock_response = '{"successful": ["successful"], "unsuccessful": ["unsuccessful"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         digest = 'testString'
 
         # Invoke method
-        response = service.restore_tags(
+        response = _service.restore_tags(
             digest,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_restore_tags_all_params_with_retries(self):
+        # Enable retries and run test_restore_tags_all_params.
+        _service.enable_retries()
+        self.test_restore_tags_all_params()
+
+        # Disable retries and run test_restore_tags_all_params.
+        _service.disable_retries()
+        self.test_restore_tags_all_params()
 
     @responses.activate
     def test_restore_tags_value_error(self):
@@ -2091,13 +2918,15 @@ class TestRestoreTags():
         test_restore_tags_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash/testString/restoretags')
+        url = preprocess_url('/api/v1/trash/testString/restoretags')
         mock_response = '{"successful": ["successful"], "unsuccessful": ["unsuccessful"]}'
-        responses.add(responses.POST,
-                      url,
-                      body=mock_response,
-                      content_type='application/json',
-                      status=200)
+        responses.add(
+            responses.POST,
+            url,
+            body=mock_response,
+            content_type='application/json',
+            status=200,
+        )
 
         # Set up parameter values
         digest = 'testString'
@@ -2107,25 +2936,24 @@ class TestRestoreTags():
             "digest": digest,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.restore_tags(**req_copy)
+                _service.restore_tags(**req_copy)
+
+    def test_restore_tags_value_error_with_retries(self):
+        # Enable retries and run test_restore_tags_value_error.
+        _service.enable_retries()
+        self.test_restore_tags_value_error()
+
+        # Disable retries and run test_restore_tags_value_error.
+        _service.disable_retries()
+        self.test_restore_tags_value_error()
 
 
-
-class TestRestoreImage():
+class TestRestoreImage:
     """
     Test Class for restore_image
     """
-
-    def preprocess_url(self, request_url: str):
-        """
-        Preprocess the request URL to ensure the mock response will be found.
-        """
-        if re.fullmatch('.*/+', request_url) is None:
-            return request_url
-        else:
-            return re.compile(request_url.rstrip('/') + '/+')
 
     @responses.activate
     def test_restore_image_all_params(self):
@@ -2133,24 +2961,34 @@ class TestRestoreImage():
         restore_image()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash/testString/restore')
-        responses.add(responses.POST,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/trash/testString/restore')
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
 
         # Invoke method
-        response = service.restore_image(
+        response = _service.restore_image(
             image,
-            headers={}
+            headers={},
         )
 
         # Check for correct operation
         assert len(responses.calls) == 1
         assert response.status_code == 200
 
+    def test_restore_image_all_params_with_retries(self):
+        # Enable retries and run test_restore_image_all_params.
+        _service.enable_retries()
+        self.test_restore_image_all_params()
+
+        # Disable retries and run test_restore_image_all_params.
+        _service.disable_retries()
+        self.test_restore_image_all_params()
 
     @responses.activate
     def test_restore_image_value_error(self):
@@ -2158,10 +2996,12 @@ class TestRestoreImage():
         test_restore_image_value_error()
         """
         # Set up mock
-        url = self.preprocess_url(base_url + '/api/v1/trash/testString/restore')
-        responses.add(responses.POST,
-                      url,
-                      status=200)
+        url = preprocess_url('/api/v1/trash/testString/restore')
+        responses.add(
+            responses.POST,
+            url,
+            status=200,
+        )
 
         # Set up parameter values
         image = 'testString'
@@ -2171,10 +3011,18 @@ class TestRestoreImage():
             "image": image,
         }
         for param in req_param_dict.keys():
-            req_copy = {key:val if key is not param else None for (key,val) in req_param_dict.items()}
+            req_copy = {key: val if key is not param else None for (key, val) in req_param_dict.items()}
             with pytest.raises(ValueError):
-                service.restore_image(**req_copy)
+                _service.restore_image(**req_copy)
 
+    def test_restore_image_value_error_with_retries(self):
+        # Enable retries and run test_restore_image_value_error.
+        _service.enable_retries()
+        self.test_restore_image_value_error()
+
+        # Disable retries and run test_restore_image_value_error.
+        _service.disable_retries()
+        self.test_restore_image_value_error()
 
 
 # endregion
@@ -2187,7 +3035,9 @@ class TestRestoreImage():
 # Start of Model Tests
 ##############################################################################
 # region
-class TestAccountSettings():
+
+
+class TestModel_AccountSettings:
     """
     Test Class for AccountSettings
     """
@@ -2216,7 +3066,8 @@ class TestAccountSettings():
         account_settings_model_json2 = account_settings_model.to_dict()
         assert account_settings_model_json2 == account_settings_model_json
 
-class TestAuthOptions():
+
+class TestModel_AuthOptions:
     """
     Test Class for AuthOptions
     """
@@ -2246,7 +3097,8 @@ class TestAuthOptions():
         auth_options_model_json2 = auth_options_model.to_dict()
         assert auth_options_model_json2 == auth_options_model_json
 
-class TestConfig():
+
+class TestModel_Config:
     """
     Test Class for Config
     """
@@ -2258,7 +3110,7 @@ class TestConfig():
 
         # Construct dict forms of any model objects needed in order to build this model.
 
-        health_config_model = {} # HealthConfig
+        health_config_model = {}  # HealthConfig
         health_config_model['Interval'] = 26
         health_config_model['Retries'] = 26
         health_config_model['Test'] = ['testString']
@@ -2274,11 +3126,11 @@ class TestConfig():
         config_model_json['Domainname'] = 'testString'
         config_model_json['Entrypoint'] = ['testString']
         config_model_json['Env'] = ['testString']
-        config_model_json['ExposedPorts'] = {}
+        config_model_json['ExposedPorts'] = {'anyKey': 'anyValue'}
         config_model_json['Healthcheck'] = health_config_model
         config_model_json['Hostname'] = 'testString'
         config_model_json['Image'] = 'testString'
-        config_model_json['Labels'] = {}
+        config_model_json['Labels'] = {'key1': 'testString'}
         config_model_json['MacAddress'] = 'testString'
         config_model_json['NetworkDisabled'] = True
         config_model_json['OnBuild'] = ['testString']
@@ -2289,7 +3141,7 @@ class TestConfig():
         config_model_json['StopTimeout'] = 26
         config_model_json['Tty'] = True
         config_model_json['User'] = 'testString'
-        config_model_json['Volumes'] = {}
+        config_model_json['Volumes'] = {'anyKey': 'anyValue'}
         config_model_json['WorkingDir'] = 'testString'
 
         # Construct a model instance of Config by calling from_dict on the json representation
@@ -2307,7 +3159,8 @@ class TestConfig():
         config_model_json2 = config_model.to_dict()
         assert config_model_json2 == config_model_json
 
-class TestHealthConfig():
+
+class TestModel_HealthConfig:
     """
     Test Class for HealthConfig
     """
@@ -2339,7 +3192,8 @@ class TestHealthConfig():
         health_config_model_json2 = health_config_model.to_dict()
         assert health_config_model_json2 == health_config_model_json
 
-class TestImageBulkDeleteError():
+
+class TestModel_ImageBulkDeleteError:
     """
     Test Class for ImageBulkDeleteError
     """
@@ -2369,7 +3223,8 @@ class TestImageBulkDeleteError():
         image_bulk_delete_error_model_json2 = image_bulk_delete_error_model.to_dict()
         assert image_bulk_delete_error_model_json2 == image_bulk_delete_error_model_json
 
-class TestImageBulkDeleteResult():
+
+class TestModel_ImageBulkDeleteResult:
     """
     Test Class for ImageBulkDeleteResult
     """
@@ -2381,13 +3236,13 @@ class TestImageBulkDeleteResult():
 
         # Construct dict forms of any model objects needed in order to build this model.
 
-        image_bulk_delete_error_model = {} # ImageBulkDeleteError
+        image_bulk_delete_error_model = {}  # ImageBulkDeleteError
         image_bulk_delete_error_model['code'] = 'testString'
         image_bulk_delete_error_model['message'] = 'testString'
 
         # Construct a json representation of a ImageBulkDeleteResult model
         image_bulk_delete_result_model_json = {}
-        image_bulk_delete_result_model_json['error'] = {}
+        image_bulk_delete_result_model_json['error'] = {'key1': image_bulk_delete_error_model}
         image_bulk_delete_result_model_json['success'] = ['testString']
 
         # Construct a model instance of ImageBulkDeleteResult by calling from_dict on the json representation
@@ -2405,7 +3260,8 @@ class TestImageBulkDeleteResult():
         image_bulk_delete_result_model_json2 = image_bulk_delete_result_model.to_dict()
         assert image_bulk_delete_result_model_json2 == image_bulk_delete_result_model_json
 
-class TestImageDeleteResult():
+
+class TestModel_ImageDeleteResult:
     """
     Test Class for ImageDeleteResult
     """
@@ -2434,7 +3290,8 @@ class TestImageDeleteResult():
         image_delete_result_model_json2 = image_delete_result_model.to_dict()
         assert image_delete_result_model_json2 == image_delete_result_model_json
 
-class TestImageDigest():
+
+class TestModel_ImageDigest:
     """
     Test Class for ImageDigest
     """
@@ -2446,7 +3303,7 @@ class TestImageDigest():
 
         # Construct dict forms of any model objects needed in order to build this model.
 
-        va_report_model = {} # VAReport
+        va_report_model = {}  # VAReport
         va_report_model['configurationIssueCount'] = 26
         va_report_model['exemptIssueCount'] = 26
         va_report_model['issueCount'] = 26
@@ -2458,7 +3315,7 @@ class TestImageDigest():
         image_digest_model_json['created'] = 26
         image_digest_model_json['id'] = 'testString'
         image_digest_model_json['manifestType'] = 'testString'
-        image_digest_model_json['repoTags'] = {}
+        image_digest_model_json['repoTags'] = {'key1': {'key1': va_report_model}}
         image_digest_model_json['size'] = 26
 
         # Construct a model instance of ImageDigest by calling from_dict on the json representation
@@ -2476,7 +3333,8 @@ class TestImageDigest():
         image_digest_model_json2 = image_digest_model.to_dict()
         assert image_digest_model_json2 == image_digest_model_json
 
-class TestImageInspection():
+
+class TestModel_ImageInspection:
     """
     Test Class for ImageInspection
     """
@@ -2488,13 +3346,13 @@ class TestImageInspection():
 
         # Construct dict forms of any model objects needed in order to build this model.
 
-        health_config_model = {} # HealthConfig
+        health_config_model = {}  # HealthConfig
         health_config_model['Interval'] = 26
         health_config_model['Retries'] = 26
         health_config_model['Test'] = ['testString']
         health_config_model['Timeout'] = 26
 
-        config_model = {} # Config
+        config_model = {}  # Config
         config_model['ArgsEscaped'] = True
         config_model['AttachStderr'] = True
         config_model['AttachStdin'] = True
@@ -2503,11 +3361,11 @@ class TestImageInspection():
         config_model['Domainname'] = 'testString'
         config_model['Entrypoint'] = ['testString']
         config_model['Env'] = ['testString']
-        config_model['ExposedPorts'] = {}
+        config_model['ExposedPorts'] = {'anyKey': 'anyValue'}
         config_model['Healthcheck'] = health_config_model
         config_model['Hostname'] = 'testString'
         config_model['Image'] = 'testString'
-        config_model['Labels'] = {}
+        config_model['Labels'] = {'key1': 'testString'}
         config_model['MacAddress'] = 'testString'
         config_model['NetworkDisabled'] = True
         config_model['OnBuild'] = ['testString']
@@ -2518,10 +3376,10 @@ class TestImageInspection():
         config_model['StopTimeout'] = 26
         config_model['Tty'] = True
         config_model['User'] = 'testString'
-        config_model['Volumes'] = {}
+        config_model['Volumes'] = {'anyKey': 'anyValue'}
         config_model['WorkingDir'] = 'testString'
 
-        root_fs_model = {} # RootFS
+        root_fs_model = {}  # RootFS
         root_fs_model['BaseLayer'] = 'testString'
         root_fs_model['Layers'] = ['testString']
         root_fs_model['Type'] = 'testString'
@@ -2560,7 +3418,8 @@ class TestImageInspection():
         image_inspection_model_json2 = image_inspection_model.to_dict()
         assert image_inspection_model_json2 == image_inspection_model_json
 
-class TestNamespace():
+
+class TestModel_Namespace:
     """
     Test Class for Namespace
     """
@@ -2589,7 +3448,8 @@ class TestNamespace():
         namespace_model_json2 = namespace_model.to_dict()
         assert namespace_model_json2 == namespace_model_json
 
-class TestNamespaceDetails():
+
+class TestModel_NamespaceDetails:
     """
     Test Class for NamespaceDetails
     """
@@ -2624,7 +3484,8 @@ class TestNamespaceDetails():
         namespace_details_model_json2 = namespace_details_model.to_dict()
         assert namespace_details_model_json2 == namespace_details_model_json
 
-class TestPlan():
+
+class TestModel_Plan:
     """
     Test Class for Plan
     """
@@ -2653,7 +3514,8 @@ class TestPlan():
         plan_model_json2 = plan_model.to_dict()
         assert plan_model_json2 == plan_model_json
 
-class TestQuota():
+
+class TestModel_Quota:
     """
     Test Class for Quota
     """
@@ -2665,7 +3527,7 @@ class TestQuota():
 
         # Construct dict forms of any model objects needed in order to build this model.
 
-        quota_details_model = {} # QuotaDetails
+        quota_details_model = {}  # QuotaDetails
         quota_details_model['storage_bytes'] = 26
         quota_details_model['traffic_bytes'] = 26
 
@@ -2689,7 +3551,8 @@ class TestQuota():
         quota_model_json2 = quota_model.to_dict()
         assert quota_model_json2 == quota_model_json
 
-class TestQuotaDetails():
+
+class TestModel_QuotaDetails:
     """
     Test Class for QuotaDetails
     """
@@ -2719,7 +3582,8 @@ class TestQuotaDetails():
         quota_details_model_json2 = quota_details_model.to_dict()
         assert quota_details_model_json2 == quota_details_model_json
 
-class TestRemoteAPIImage():
+
+class TestModel_RemoteAPIImage:
     """
     Test Class for RemoteAPIImage
     """
@@ -2733,11 +3597,11 @@ class TestRemoteAPIImage():
         remote_api_image_model_json = {}
         remote_api_image_model_json['ConfigurationIssueCount'] = 26
         remote_api_image_model_json['Created'] = 26
-        remote_api_image_model_json['DigestTags'] = {}
+        remote_api_image_model_json['DigestTags'] = {'key1': ['testString']}
         remote_api_image_model_json['ExemptIssueCount'] = 26
         remote_api_image_model_json['Id'] = 'testString'
         remote_api_image_model_json['IssueCount'] = 26
-        remote_api_image_model_json['Labels'] = {}
+        remote_api_image_model_json['Labels'] = {'key1': 'testString'}
         remote_api_image_model_json['ManifestType'] = 'testString'
         remote_api_image_model_json['ParentId'] = 'testString'
         remote_api_image_model_json['RepoDigests'] = ['testString']
@@ -2762,7 +3626,8 @@ class TestRemoteAPIImage():
         remote_api_image_model_json2 = remote_api_image_model.to_dict()
         assert remote_api_image_model_json2 == remote_api_image_model_json
 
-class TestRestoreResult():
+
+class TestModel_RestoreResult:
     """
     Test Class for RestoreResult
     """
@@ -2792,7 +3657,8 @@ class TestRestoreResult():
         restore_result_model_json2 = restore_result_model.to_dict()
         assert restore_result_model_json2 == restore_result_model_json
 
-class TestRetentionPolicy():
+
+class TestModel_RetentionPolicy:
     """
     Test Class for RetentionPolicy
     """
@@ -2823,7 +3689,8 @@ class TestRetentionPolicy():
         retention_policy_model_json2 = retention_policy_model.to_dict()
         assert retention_policy_model_json2 == retention_policy_model_json
 
-class TestRootFS():
+
+class TestModel_RootFS:
     """
     Test Class for RootFS
     """
@@ -2854,7 +3721,8 @@ class TestRootFS():
         root_fs_model_json2 = root_fs_model.to_dict()
         assert root_fs_model_json2 == root_fs_model_json
 
-class TestTrash():
+
+class TestModel_Trash:
     """
     Test Class for Trash
     """
@@ -2884,7 +3752,8 @@ class TestTrash():
         trash_model_json2 = trash_model.to_dict()
         assert trash_model_json2 == trash_model_json
 
-class TestVAReport():
+
+class TestModel_VAReport:
     """
     Test Class for VAReport
     """
