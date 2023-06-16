@@ -1,6 +1,12 @@
 language: python
+python:
+  - '3.7'
+  - '3.8'
+  - '3.9'
+  - '3.10'
+  - '3.11'
 
-dist: xenial
+dist: focal
 
 cache: pip
 
@@ -10,7 +16,10 @@ notifications:
 matrix:
   include:
     - python: 3.7
+    - python: 3.8
     - python: 3.9
+    - python: 3.10
+    - python: 3.11
 
 before_install:
 - npm install npm@latest -g
@@ -29,19 +38,30 @@ script: tox
 # To enable semantic-release, uncomment these sections.
 before_deploy:
 - pip install bump2version
-- nvm install 14
+- nvm install lts/*
 - npm install @semantic-release/changelog
 - npm install @semantic-release/exec
 - npm install @semantic-release/git
 - npm install @semantic-release/github
-
+- npx semantic-release
 deploy:
 - provider: script
-  script: npx semantic-release
+  script:
+    - npx semantic-release
   skip_cleanup: true
   on:
-    python: '3.7'
     branch: main
+    # only on 1 matrix job
+    python: '3.7'
+# ensure semantic-release is functional
+- provider: script
+  script:
+    - npx semantic-release --dry-run
+  skip_cleanup: true
+  on:
+    all_branches: true
+    # only on 1 matrix job
+    python: '3.7'
 - provider: pypi
   user: __token__
   password: $PYPI_TOKEN
