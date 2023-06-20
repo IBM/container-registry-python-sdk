@@ -1,3 +1,11 @@
+## [0.0.9](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.8...v0.0.9) (2023-06-20)
+
+
+### Bug Fixes
+
+* **container_registry_v1:** fix linter ([1fe59c5](https://github.com/IBM/container-registry-python-sdk/commit/1fe59c5bcc10fdce4d7e0aae1e1b7fdf16ae4fe6))
+* **container_registry_v1:** Fix test_get_image_manifest to correctly convert type if not dict ([293dc56](https://github.com/IBM/container-registry-python-sdk/commit/293dc56b77a5e33d381bd3a8438c5c93b53fb5c5))
+
 ## [0.0.8](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.7...v0.0.8) (2022-08-11)
 
 
