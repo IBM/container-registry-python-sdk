@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# (C) Copyright IBM Corp. 2021.
+# (C) Copyright IBM Corp. 2023.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# IBM OpenAPI SDK Code Generator Version: 3.29.1-b338fb38-20210313-010605
+# IBM OpenAPI SDK Code Generator Version: 3.73.0-eeee85a9-20230607-165104
 
 """
 Management interface for IBM Cloud Container Registry
+
+API Version: 1.1
 """
 
 from typing import Dict, List
@@ -33,17 +35,35 @@ from .common import get_sdk_headers
 # Service
 ##############################################################################
 
+
 class ContainerRegistryV1(BaseService):
     """The Container Registry V1 service."""
 
-    DEFAULT_SERVICE_URL = 'https://us.icr.io'
+    DEFAULT_SERVICE_URL = 'https://icr.io'
     DEFAULT_SERVICE_NAME = 'container_registry'
 
+    REGIONAL_ENDPOINTS = {
+        'global': 'https://icr.io', # global
+        'us-south': 'https://us.icr.io', # us-south
+        'uk-south': 'https://uk.icr.io', # uk-south
+        'eu-gb': 'https://uk.icr.io', # eu-gb
+        'eu-central': 'https://de.icr.io', # eu-central
+        'eu-de': 'https://de.icr.io', # eu-de
+        'ap-north': 'https://jp.icr.io', # ap-north
+        'jp-tok': 'https://jp.icr.io', # jp-tok
+        'ap-south': 'https://au.icr.io', # ap-south
+        'au-syd': 'https://au.icr.io', # au-syd
+        'jp-osa': 'https://jp2.icr.io', # jp-osa
+        'ca-tor': 'https://ca.icr.io', # ca-tor
+        'br-sao': 'https://br.icr.io', # br-sao
+    }
+
     @classmethod
-    def new_instance(cls,
-                     account: str,
-                     service_name: str = DEFAULT_SERVICE_NAME,
-                    ) -> 'ContainerRegistryV1':
+    def new_instance(
+        cls,
+        account: str,
+        service_name: str = DEFAULT_SERVICE_NAME,
+    ) -> 'ContainerRegistryV1':
         """
         Return a new client for the Container Registry service using the specified
                parameters and external configuration.
@@ -61,35 +81,47 @@ class ContainerRegistryV1(BaseService):
         service.configure_service(service_name)
         return service
 
-    def __init__(self,
-                 account: str,
-                 authenticator: Authenticator = None,
-                ) -> None:
+    @classmethod
+    def get_service_url_for_region(
+        cls,
+        region: str,
+    ) -> str:
+        """
+        Returns the service URL associated with the specified region.
+        :param str region: a string representing the region
+        :return: The service URL associated with the specified region or None
+                 if no mapping for the region exists
+        :rtype: str
+        """
+        return cls.REGIONAL_ENDPOINTS.get(region, None)
+
+    def __init__(
+        self,
+        account: str,
+        authenticator: Authenticator = None,
+    ) -> None:
         """
         Construct a new client for the Container Registry service.
 
         :param str account: The unique ID for your IBM Cloud account.
 
         :param Authenticator authenticator: The authenticator specifies the authentication mechanism.
-               Get up to date information from https://github.com/IBM/python-sdk-core/blob/master/README.md
+               Get up to date information from https://github.com/IBM/python-sdk-core/blob/main/README.md
                about initializing the authenticator of your choice.
         """
         if account is None:
             raise ValueError('account must be provided')
 
-        BaseService.__init__(self,
-                             service_url=self.DEFAULT_SERVICE_URL,
-                             authenticator=authenticator)
+        BaseService.__init__(self, service_url=self.DEFAULT_SERVICE_URL, authenticator=authenticator)
         self.account = account
-
 
     #########################
     # Authorization
     #########################
 
-
-    def get_auth(self,
-        **kwargs
+    def get_auth(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get authorization options.
@@ -102,31 +134,36 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_auth')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_auth',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/auth'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def update_auth(self,
+    def update_auth(
+        self,
         *,
         iam_authz: bool = None,
         private_only: bool = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Update authorization options.
@@ -143,16 +180,18 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='update_auth')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='update_auth',
+        )
         headers.update(sdk_headers)
 
         data = {
             'iam_authz': iam_authz,
-            'private_only': private_only
+            'private_only': private_only,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -160,22 +199,25 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/auth'
-        request = self.prepare_request(method='PATCH',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Images
     #########################
 
-
-    def list_images(self,
+    def list_images(
+        self,
         *,
         namespace: str = None,
         include_ibm: bool = None,
@@ -183,7 +225,7 @@ class ContainerRegistryV1(BaseService):
         include_manifest_lists: bool = None,
         vulnerabilities: bool = None,
         repository: str = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         List images.
@@ -220,11 +262,13 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_images')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_images',
+        )
         headers.update(sdk_headers)
 
         params = {
@@ -233,26 +277,29 @@ class ContainerRegistryV1(BaseService):
             'includePrivate': include_private,
             'includeManifestLists': include_manifest_lists,
             'vulnerabilities': vulnerabilities,
-            'repository': repository
+            'repository': repository,
         }
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/images'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers,
-                                       params=params)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+            params=params,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def bulk_delete_images(self,
+    def bulk_delete_images(
+        self,
         bulk_delete: List[str],
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Bulk delete images.
@@ -270,11 +317,13 @@ class ContainerRegistryV1(BaseService):
         if bulk_delete is None:
             raise ValueError('bulk_delete must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='bulk_delete_images')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='bulk_delete_images',
+        )
         headers.update(sdk_headers)
 
         data = json.dumps(bulk_delete)
@@ -282,25 +331,28 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/images/bulkdelete'
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def list_image_digests(self,
+    def list_image_digests(
+        self,
         *,
         exclude_tagged: bool = None,
         exclude_va: bool = None,
         include_ibm: bool = None,
         repositories: List[str] = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         List images by digest.
@@ -321,18 +373,20 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_image_digests')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_image_digests',
+        )
         headers.update(sdk_headers)
 
         data = {
             'exclude_tagged': exclude_tagged,
             'exclude_va': exclude_va,
             'include_ibm': include_ibm,
-            'repositories': repositories
+            'repositories': repositories,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -340,28 +394,32 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/images/digests'
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def tag_image(self,
+    def tag_image(
+        self,
         fromimage: str,
         toimage: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Create tag.
 
         Create a new tag in a private registry that refers to an existing image in the
-        same region.
+        same region. If the fromimage has Red Hat® signatures and the toimage is in a
+        different repository, those signatures are copied to that repository.
 
         :param str fromimage: The name of the image that you want to create a new
                tag for, in the format &lt;REPOSITORY&gt;:&lt;TAG&gt;. Run `ibmcloud cr
@@ -374,39 +432,44 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse
         """
 
-        if fromimage is None:
+        if not fromimage:
             raise ValueError('fromimage must be provided')
-        if toimage is None:
+        if not toimage:
             raise ValueError('toimage must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='tag_image')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='tag_image',
+        )
         headers.update(sdk_headers)
 
         params = {
             'fromimage': fromimage,
-            'toimage': toimage
+            'toimage': toimage,
         }
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/images/tags'
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers,
-                                       params=params)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+            params=params,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def delete_image(self,
+    def delete_image(
+        self,
         image: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Delete image.
@@ -421,35 +484,40 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result representing a `ImageDeleteResult` object
         """
 
-        if image is None:
+        if not image:
             raise ValueError('image must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='delete_image')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='delete_image',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['image']
         path_param_values = self.encode_path_vars(image)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/images/{image}'.format(**path_param_dict)
-        request = self.prepare_request(method='DELETE',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='DELETE',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def inspect_image(self,
+    def inspect_image(
+        self,
         image: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Inspect an image.
@@ -464,35 +532,40 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result representing a `ImageInspection` object
         """
 
-        if image is None:
+        if not image:
             raise ValueError('image must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='inspect_image')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='inspect_image',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['image']
         path_param_values = self.encode_path_vars(image)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/images/{image}/json'.format(**path_param_dict)
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def get_image_manifest(self,
+    def get_image_manifest(
+        self,
         image: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get image manifest.
@@ -507,38 +580,43 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result
         """
 
-        if image is None:
+        if not image:
             raise ValueError('image must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_image_manifest')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_image_manifest',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['image']
         path_param_values = self.encode_path_vars(image)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/images/{image}/manifest'.format(**path_param_dict)
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Messages
     #########################
 
-
-    def get_messages(self,
-        **kwargs
+    def get_messages(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get messages.
@@ -551,30 +629,35 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {}
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_messages')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_messages',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/messages'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Namespaces
     #########################
 
-
-    def list_namespaces(self,
-        **kwargs
+    def list_namespaces(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         List namespaces.
@@ -587,28 +670,33 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_namespaces')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_namespaces',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/namespaces'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def list_namespace_details(self,
-        **kwargs
+    def list_namespace_details(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Detailed namespace list.
@@ -622,76 +710,86 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_namespace_details')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_namespace_details',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/namespaces/details'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def create_namespace(self,
+    def create_namespace(
+        self,
         name: str,
         *,
         x_auth_resource_group: str = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Create namespace.
 
         Add a namespace to the targeted IBM Cloud account.
 
-        :param str name: The name of the namespace.
+        :param str name: The name of the namespace that you want to create.
         :param str x_auth_resource_group: (optional) The ID of the resource group
-               that the namespace will be created within.
+               to which you want to add the namespace.
         :param dict headers: A `dict` containing the request headers
         :return: A `DetailedResponse` containing the result, headers and HTTP status code.
         :rtype: DetailedResponse with `dict` result representing a `Namespace` object
         """
 
-        if name is None:
+        if not name:
             raise ValueError('name must be provided')
         headers = {
             'Account': self.account,
-            'X-Auth-Resource-Group': x_auth_resource_group
+            'X-Auth-Resource-Group': x_auth_resource_group,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='create_namespace')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='create_namespace',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['name']
         path_param_values = self.encode_path_vars(name)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/namespaces/{name}'.format(**path_param_dict)
-        request = self.prepare_request(method='PUT',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='PUT',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def assign_namespace(self,
+    def assign_namespace(
+        self,
         x_auth_resource_group: str,
         name: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Assign namespace.
@@ -699,46 +797,51 @@ class ContainerRegistryV1(BaseService):
         Assign a namespace to the specified resource group in the targeted IBM Cloud
         account.
 
-        :param str x_auth_resource_group: The ID of the resource group that the
-               namespace will be created within.
-        :param str name: The name of the namespace to be updated.
+        :param str x_auth_resource_group: The ID of the resource group to which you
+               want to add the namespace.
+        :param str name: The name of the namespace that you want to udpate.
         :param dict headers: A `dict` containing the request headers
         :return: A `DetailedResponse` containing the result, headers and HTTP status code.
         :rtype: DetailedResponse with `dict` result representing a `Namespace` object
         """
 
-        if x_auth_resource_group is None:
+        if not x_auth_resource_group:
             raise ValueError('x_auth_resource_group must be provided')
-        if name is None:
+        if not name:
             raise ValueError('name must be provided')
         headers = {
             'Account': self.account,
-            'X-Auth-Resource-Group': x_auth_resource_group
+            'X-Auth-Resource-Group': x_auth_resource_group,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='assign_namespace')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='assign_namespace',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['name']
         path_param_values = self.encode_path_vars(name)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/namespaces/{name}'.format(**path_param_dict)
-        request = self.prepare_request(method='PATCH',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def delete_namespace(self,
+    def delete_namespace(
+        self,
         name: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Delete namespace.
@@ -752,37 +855,42 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse
         """
 
-        if name is None:
+        if not name:
             raise ValueError('name must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='delete_namespace')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='delete_namespace',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         path_param_keys = ['name']
         path_param_values = self.encode_path_vars(name)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/namespaces/{name}'.format(**path_param_dict)
-        request = self.prepare_request(method='DELETE',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='DELETE',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Plans
     #########################
 
-
-    def get_plans(self,
-        **kwargs
+    def get_plans(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get plans.
@@ -795,30 +903,35 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_plans')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_plans',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/plans'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def update_plans(self,
+    def update_plans(
+        self,
         *,
         plan: str = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Update plans.
@@ -832,15 +945,17 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='update_plans')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='update_plans',
+        )
         headers.update(sdk_headers)
 
         data = {
-            'plan': plan
+            'plan': plan,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -848,23 +963,26 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/plans'
-        request = self.prepare_request(method='PATCH',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Quotas
     #########################
 
-
-    def get_quota(self,
-        **kwargs
+    def get_quota(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get quotas.
@@ -877,31 +995,36 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_quota')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_quota',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/quotas'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def update_quota(self,
+    def update_quota(
+        self,
         *,
         storage_megabytes: int = None,
         traffic_megabytes: int = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Update quotas.
@@ -918,16 +1041,18 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='update_quota')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='update_quota',
+        )
         headers.update(sdk_headers)
 
         data = {
             'storage_megabytes': storage_megabytes,
-            'traffic_megabytes': traffic_megabytes
+            'traffic_megabytes': traffic_megabytes,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -935,23 +1060,26 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/quotas'
-        request = self.prepare_request(method='PATCH',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Retentions
     #########################
 
-
-    def list_retention_policies(self,
-        **kwargs
+    def list_retention_policies(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         List retention policies.
@@ -964,32 +1092,37 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_retention_policies')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_retention_policies',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/retentions'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def set_retention_policy(self,
+    def set_retention_policy(
+        self,
         namespace: str,
         *,
         images_per_repo: int = None,
         retain_untagged: bool = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Set retention policy.
@@ -998,12 +1131,13 @@ class ContainerRegistryV1(BaseService):
 
         :param str namespace: The namespace to which the retention policy is
                attached.
-        :param int images_per_repo: (optional) Determines how many images will be
-               retained for each repository when the retention policy is executed. The
+        :param int images_per_repo: (optional) Determines how many images are
+               retained in each repository when the retention policy is processed. The
                value -1 denotes 'Unlimited' (all images are retained).
-        :param bool retain_untagged: (optional) Determines if untagged images are
-               retained when executing the retention policy. This is false by default
-               meaning untagged images will be deleted when the policy is executed.
+        :param bool retain_untagged: (optional) Determines whether untagged images
+               are retained when the retention policy is processed. The value is false by
+               default, which means that  untagged images can be deleted when the policy
+               runs.
         :param dict headers: A `dict` containing the request headers
         :return: A `DetailedResponse` containing the result, headers and HTTP status code.
         :rtype: DetailedResponse
@@ -1012,17 +1146,19 @@ class ContainerRegistryV1(BaseService):
         if namespace is None:
             raise ValueError('namespace must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='set_retention_policy')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='set_retention_policy',
+        )
         headers.update(sdk_headers)
 
         data = {
             'namespace': namespace,
             'images_per_repo': images_per_repo,
-            'retain_untagged': retain_untagged
+            'retain_untagged': retain_untagged,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -1030,23 +1166,26 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/retentions'
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def analyze_retention_policy(self,
+    def analyze_retention_policy(
+        self,
         namespace: str,
         *,
         images_per_repo: int = None,
         retain_untagged: bool = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Analyze retention policy.
@@ -1055,12 +1194,13 @@ class ContainerRegistryV1(BaseService):
 
         :param str namespace: The namespace to which the retention policy is
                attached.
-        :param int images_per_repo: (optional) Determines how many images will be
-               retained for each repository when the retention policy is executed. The
+        :param int images_per_repo: (optional) Determines how many images are
+               retained in each repository when the retention policy is processed. The
                value -1 denotes 'Unlimited' (all images are retained).
-        :param bool retain_untagged: (optional) Determines if untagged images are
-               retained when executing the retention policy. This is false by default
-               meaning untagged images will be deleted when the policy is executed.
+        :param bool retain_untagged: (optional) Determines whether untagged images
+               are retained when the retention policy is processed. The value is false by
+               default, which means that  untagged images can be deleted when the policy
+               runs.
         :param dict headers: A `dict` containing the request headers
         :return: A `DetailedResponse` containing the result, headers and HTTP status code.
         :rtype: DetailedResponse with `dict` result
@@ -1069,17 +1209,19 @@ class ContainerRegistryV1(BaseService):
         if namespace is None:
             raise ValueError('namespace must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='analyze_retention_policy')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='analyze_retention_policy',
+        )
         headers.update(sdk_headers)
 
         data = {
             'namespace': namespace,
             'images_per_repo': images_per_repo,
-            'retain_untagged': retain_untagged
+            'retain_untagged': retain_untagged,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -1087,21 +1229,24 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/retentions/analyze'
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def get_retention_policy(self,
+    def get_retention_policy(
+        self,
         namespace: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get retention policy.
@@ -1115,38 +1260,43 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result representing a `RetentionPolicy` object
         """
 
-        if namespace is None:
+        if not namespace:
             raise ValueError('namespace must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_retention_policy')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_retention_policy',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['namespace']
         path_param_values = self.encode_path_vars(namespace)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/retentions/{namespace}'.format(**path_param_dict)
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Settings
     #########################
 
-
-    def get_settings(self,
-        **kwargs
+    def get_settings(
+        self,
+        **kwargs,
     ) -> DetailedResponse:
         """
         Get account settings.
@@ -1159,30 +1309,35 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='get_settings')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='get_settings',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/settings'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def update_settings(self,
+    def update_settings(
+        self,
         *,
         platform_metrics: bool = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Update account settings.
@@ -1197,15 +1352,17 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='update_settings')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='update_settings',
+        )
         headers.update(sdk_headers)
 
         data = {
-            'platform_metrics': platform_metrics
+            'platform_metrics': platform_metrics,
         }
         data = {k: v for (k, v) in data.items() if v is not None}
         data = json.dumps(data)
@@ -1213,24 +1370,27 @@ class ContainerRegistryV1(BaseService):
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         url = '/api/v1/settings'
-        request = self.prepare_request(method='PATCH',
-                                       url=url,
-                                       headers=headers,
-                                       data=data)
+        request = self.prepare_request(
+            method='PATCH',
+            url=url,
+            headers=headers,
+            data=data,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Tags
     #########################
 
-
-    def delete_image_tag(self,
+    def delete_image_tag(
+        self,
         image: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Delete tag.
@@ -1244,40 +1404,45 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result representing a `ImageDeleteResult` object
         """
 
-        if image is None:
+        if not image:
             raise ValueError('image must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='delete_image_tag')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='delete_image_tag',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['image']
         path_param_values = self.encode_path_vars(image)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/tags/{image}'.format(**path_param_dict)
-        request = self.prepare_request(method='DELETE',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='DELETE',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
     #########################
     # Trash
     #########################
 
-
-    def list_deleted_images(self,
+    def list_deleted_images(
+        self,
         *,
         namespace: str = None,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         List deleted images.
@@ -1292,34 +1457,39 @@ class ContainerRegistryV1(BaseService):
         """
 
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='list_deleted_images')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='list_deleted_images',
+        )
         headers.update(sdk_headers)
 
         params = {
-            'namespace': namespace
+            'namespace': namespace,
         }
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         url = '/api/v1/trash'
-        request = self.prepare_request(method='GET',
-                                       url=url,
-                                       headers=headers,
-                                       params=params)
+        request = self.prepare_request(
+            method='GET',
+            url=url,
+            headers=headers,
+            params=params,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def restore_tags(self,
+    def restore_tags(
+        self,
         digest: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Restore a digest and all associated tags.
@@ -1337,35 +1507,40 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse with `dict` result representing a `RestoreResult` object
         """
 
-        if digest is None:
+        if not digest:
             raise ValueError('digest must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='restore_tags')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='restore_tags',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
         headers['Accept'] = 'application/json'
 
         path_param_keys = ['digest']
         path_param_values = self.encode_path_vars(digest)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/trash/{digest}/restoretags'.format(**path_param_dict)
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
-
-    def restore_image(self,
+    def restore_image(
+        self,
         image: str,
-        **kwargs
+        **kwargs,
     ) -> DetailedResponse:
         """
         Restore deleted image.
@@ -1380,28 +1555,33 @@ class ContainerRegistryV1(BaseService):
         :rtype: DetailedResponse
         """
 
-        if image is None:
+        if not image:
             raise ValueError('image must be provided')
         headers = {
-            'Account': self.account
+            'Account': self.account,
         }
-        sdk_headers = get_sdk_headers(service_name=self.DEFAULT_SERVICE_NAME,
-                                      service_version='V1',
-                                      operation_id='restore_image')
+        sdk_headers = get_sdk_headers(
+            service_name=self.DEFAULT_SERVICE_NAME,
+            service_version='V1',
+            operation_id='restore_image',
+        )
         headers.update(sdk_headers)
 
         if 'headers' in kwargs:
             headers.update(kwargs.get('headers'))
+            del kwargs['headers']
 
         path_param_keys = ['image']
         path_param_values = self.encode_path_vars(image)
         path_param_dict = dict(zip(path_param_keys, path_param_values))
         url = '/api/v1/trash/{image}/restore'.format(**path_param_dict)
-        request = self.prepare_request(method='POST',
-                                       url=url,
-                                       headers=headers)
+        request = self.prepare_request(
+            method='POST',
+            url=url,
+            headers=headers,
+        )
 
-        response = self.send(request)
+        response = self.send(request, **kwargs)
         return response
 
 
@@ -1410,7 +1590,7 @@ class ContainerRegistryV1(BaseService):
 ##############################################################################
 
 
-class AccountSettings():
+class AccountSettings:
     """
     Account settings for the targeted IBM Cloud account.
 
@@ -1418,9 +1598,11 @@ class AccountSettings():
           publishing platform metrics.
     """
 
-    def __init__(self,
-                 *,
-                 platform_metrics: bool = None) -> None:
+    def __init__(
+        self,
+        *,
+        platform_metrics: bool = None,
+    ) -> None:
         """
         Initialize a AccountSettings object.
 
@@ -1467,7 +1649,8 @@ class AccountSettings():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class AuthOptions():
+
+class AuthOptions:
     """
     The authorization options for the targeted IBM Cloud account.
 
@@ -1477,10 +1660,12 @@ class AuthOptions():
           pull images over private connections.
     """
 
-    def __init__(self,
-                 *,
-                 iam_authz: bool = None,
-                 private_only: bool = None) -> None:
+    def __init__(
+        self,
+        *,
+        iam_authz: bool = None,
+        private_only: bool = None,
+    ) -> None:
         """
         Initialize a AuthOptions object.
 
@@ -1534,7 +1719,8 @@ class AuthOptions():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class Config():
+
+class Config:
     """
     The configuration data about a container.
 
@@ -1577,33 +1763,35 @@ class Config():
           will be launched.
     """
 
-    def __init__(self,
-                 *,
-                 args_escaped: bool = None,
-                 attach_stderr: bool = None,
-                 attach_stdin: bool = None,
-                 attach_stdout: bool = None,
-                 cmd: List[str] = None,
-                 domainname: str = None,
-                 entrypoint: List[str] = None,
-                 env: List[str] = None,
-                 exposed_ports: dict = None,
-                 healthcheck: 'HealthConfig' = None,
-                 hostname: str = None,
-                 image: str = None,
-                 labels: dict = None,
-                 mac_address: str = None,
-                 network_disabled: bool = None,
-                 on_build: List[str] = None,
-                 open_stdin: bool = None,
-                 shell: List[str] = None,
-                 stdin_once: bool = None,
-                 stop_signal: str = None,
-                 stop_timeout: int = None,
-                 tty: bool = None,
-                 user: str = None,
-                 volumes: dict = None,
-                 working_dir: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        args_escaped: bool = None,
+        attach_stderr: bool = None,
+        attach_stdin: bool = None,
+        attach_stdout: bool = None,
+        cmd: List[str] = None,
+        domainname: str = None,
+        entrypoint: List[str] = None,
+        env: List[str] = None,
+        exposed_ports: dict = None,
+        healthcheck: 'HealthConfig' = None,
+        hostname: str = None,
+        image: str = None,
+        labels: dict = None,
+        mac_address: str = None,
+        network_disabled: bool = None,
+        on_build: List[str] = None,
+        open_stdin: bool = None,
+        shell: List[str] = None,
+        stdin_once: bool = None,
+        stop_signal: str = None,
+        stop_timeout: int = None,
+        tty: bool = None,
+        user: str = None,
+        volumes: dict = None,
+        working_dir: str = None,
+    ) -> None:
         """
         Initialize a Config object.
 
@@ -1759,7 +1947,10 @@ class Config():
         if hasattr(self, 'exposed_ports') and self.exposed_ports is not None:
             _dict['ExposedPorts'] = self.exposed_ports
         if hasattr(self, 'healthcheck') and self.healthcheck is not None:
-            _dict['Healthcheck'] = self.healthcheck.to_dict()
+            if isinstance(self.healthcheck, dict):
+                _dict['Healthcheck'] = self.healthcheck
+            else:
+                _dict['Healthcheck'] = self.healthcheck.to_dict()
         if hasattr(self, 'hostname') and self.hostname is not None:
             _dict['Hostname'] = self.hostname
         if hasattr(self, 'image') and self.image is not None:
@@ -1810,7 +2001,8 @@ class Config():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class HealthConfig():
+
+class HealthConfig:
     """
     HealthConfig.
 
@@ -1828,12 +2020,14 @@ class HealthConfig():
           instants as an int64 nanosecond count.
     """
 
-    def __init__(self,
-                 *,
-                 interval: int = None,
-                 retries: int = None,
-                 test: List[str] = None,
-                 timeout: int = None) -> None:
+    def __init__(
+        self,
+        *,
+        interval: int = None,
+        retries: int = None,
+        test: List[str] = None,
+        timeout: int = None,
+    ) -> None:
         """
         Initialize a HealthConfig object.
 
@@ -1906,7 +2100,8 @@ class HealthConfig():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class ImageBulkDeleteError():
+
+class ImageBulkDeleteError:
     """
     Information about a failure to delete an image as part of a bulk delete.
 
@@ -1915,10 +2110,12 @@ class ImageBulkDeleteError():
           code.
     """
 
-    def __init__(self,
-                 *,
-                 code: str = None,
-                 message: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        code: str = None,
+        message: str = None,
+    ) -> None:
         """
         Initialize a ImageBulkDeleteError object.
 
@@ -1971,7 +2168,8 @@ class ImageBulkDeleteError():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class ImageBulkDeleteResult():
+
+class ImageBulkDeleteResult:
     """
     The results of a bulk image delete request.
 
@@ -1981,10 +2179,12 @@ class ImageBulkDeleteResult():
           successfully.
     """
 
-    def __init__(self,
-                 *,
-                 error: dict = None,
-                 success: List[str] = None) -> None:
+    def __init__(
+        self,
+        *,
+        error: dict = None,
+        success: List[str] = None,
+    ) -> None:
         """
         Initialize a ImageBulkDeleteResult object.
 
@@ -2001,7 +2201,7 @@ class ImageBulkDeleteResult():
         """Initialize a ImageBulkDeleteResult object from a json dictionary."""
         args = {}
         if 'error' in _dict:
-            args['error'] = {k : ImageBulkDeleteError.from_dict(v) for k, v in _dict.get('error').items()}
+            args['error'] = {k: ImageBulkDeleteError.from_dict(v) for k, v in _dict.get('error').items()}
         if 'success' in _dict:
             args['success'] = _dict.get('success')
         return cls(**args)
@@ -2015,7 +2215,13 @@ class ImageBulkDeleteResult():
         """Return a json dictionary representing this model."""
         _dict = {}
         if hasattr(self, 'error') and self.error is not None:
-            _dict['error'] = {k : v.to_dict() for k, v in self.error.items()}
+            error_map = {}
+            for k, v in self.error.items():
+                if isinstance(v, dict):
+                    error_map[k] = v
+                else:
+                    error_map[k] = v.to_dict()
+            _dict['error'] = error_map
         if hasattr(self, 'success') and self.success is not None:
             _dict['success'] = self.success
         return _dict
@@ -2038,16 +2244,19 @@ class ImageBulkDeleteResult():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class ImageDeleteResult():
+
+class ImageDeleteResult:
     """
     ImageDeleteResult.
 
     :attr str untagged: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 untagged: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        untagged: str = None,
+    ) -> None:
         """
         Initialize a ImageDeleteResult object.
 
@@ -2093,7 +2302,8 @@ class ImageDeleteResult():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class ImageDigest():
+
+class ImageDigest:
     """
     Important information about an image.
 
@@ -2105,13 +2315,15 @@ class ImageDigest():
     :attr int size: (optional) The size of the image in bytes.
     """
 
-    def __init__(self,
-                 *,
-                 created: int = None,
-                 id: str = None,
-                 manifest_type: str = None,
-                 repo_tags: dict = None,
-                 size: int = None) -> None:
+    def __init__(
+        self,
+        *,
+        created: int = None,
+        id: str = None,
+        manifest_type: str = None,
+        repo_tags: dict = None,
+        size: int = None,
+    ) -> None:
         """
         Initialize a ImageDigest object.
 
@@ -2182,7 +2394,8 @@ class ImageDigest():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class ImageInspection():
+
+class ImageInspection:
     """
     An image JSON output consistent with the Docker Remote API.
 
@@ -2213,24 +2426,26 @@ class ImageInspection():
           image in bytes.
     """
 
-    def __init__(self,
-                 *,
-                 architecture: str = None,
-                 author: str = None,
-                 comment: str = None,
-                 config: 'Config' = None,
-                 container: str = None,
-                 container_config: 'Config' = None,
-                 created: str = None,
-                 docker_version: str = None,
-                 id: str = None,
-                 manifest_type: str = None,
-                 os: str = None,
-                 os_version: str = None,
-                 parent: str = None,
-                 root_fs: 'RootFS' = None,
-                 size: int = None,
-                 virtual_size: int = None) -> None:
+    def __init__(
+        self,
+        *,
+        architecture: str = None,
+        author: str = None,
+        comment: str = None,
+        config: 'Config' = None,
+        container: str = None,
+        container_config: 'Config' = None,
+        created: str = None,
+        docker_version: str = None,
+        id: str = None,
+        manifest_type: str = None,
+        os: str = None,
+        os_version: str = None,
+        parent: str = None,
+        root_fs: 'RootFS' = None,
+        size: int = None,
+        virtual_size: int = None,
+    ) -> None:
         """
         Initialize a ImageInspection object.
 
@@ -2331,11 +2546,17 @@ class ImageInspection():
         if hasattr(self, 'comment') and self.comment is not None:
             _dict['Comment'] = self.comment
         if hasattr(self, 'config') and self.config is not None:
-            _dict['Config'] = self.config.to_dict()
+            if isinstance(self.config, dict):
+                _dict['Config'] = self.config
+            else:
+                _dict['Config'] = self.config.to_dict()
         if hasattr(self, 'container') and self.container is not None:
             _dict['Container'] = self.container
         if hasattr(self, 'container_config') and self.container_config is not None:
-            _dict['ContainerConfig'] = self.container_config.to_dict()
+            if isinstance(self.container_config, dict):
+                _dict['ContainerConfig'] = self.container_config
+            else:
+                _dict['ContainerConfig'] = self.container_config.to_dict()
         if hasattr(self, 'created') and self.created is not None:
             _dict['Created'] = self.created
         if hasattr(self, 'docker_version') and self.docker_version is not None:
@@ -2351,7 +2572,10 @@ class ImageInspection():
         if hasattr(self, 'parent') and self.parent is not None:
             _dict['Parent'] = self.parent
         if hasattr(self, 'root_fs') and self.root_fs is not None:
-            _dict['RootFS'] = self.root_fs.to_dict()
+            if isinstance(self.root_fs, dict):
+                _dict['RootFS'] = self.root_fs
+            else:
+                _dict['RootFS'] = self.root_fs.to_dict()
         if hasattr(self, 'size') and self.size is not None:
             _dict['Size'] = self.size
         if hasattr(self, 'virtual_size') and self.virtual_size is not None:
@@ -2376,16 +2600,19 @@ class ImageInspection():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class Namespace():
+
+class Namespace:
     """
     Namespace.
 
     :attr str namespace: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 namespace: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        namespace: str = None,
+    ) -> None:
         """
         Initialize a Namespace object.
 
@@ -2431,45 +2658,49 @@ class Namespace():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class NamespaceDetails():
+
+class NamespaceDetails:
     """
     Details of a namespace.
 
     :attr str account: (optional) The IBM Cloud account that owns the namespace.
-    :attr str created_date: (optional) When the namespace was created.
-    :attr str crn: (optional) If the namespace has been assigned to a resource
-          group, this is the IBM Cloud CRN representing the namespace.
+    :attr str created_date: (optional) The creation date of the namespace.
+    :attr str crn: (optional) If the namespace is assigned to a resource group, the
+          IBM Cloud CRN representing the namespace.
     :attr str name: (optional)
-    :attr str resource_created_date: (optional) When the namespace was assigned to a
-          resource group.
-    :attr str resource_group: (optional) The resource group that the namespace is
-          assigned to.
-    :attr str updated_date: (optional) When the namespace was last updated.
+    :attr str resource_created_date: (optional) The date that the namespace was
+          assigned to a resource group.
+    :attr str resource_group: (optional) The ID of the resource group to which the
+          namespace is assigned.
+    :attr str updated_date: (optional) The date that the namespace was last updated.
     """
 
-    def __init__(self,
-                 *,
-                 account: str = None,
-                 created_date: str = None,
-                 crn: str = None,
-                 name: str = None,
-                 resource_created_date: str = None,
-                 resource_group: str = None,
-                 updated_date: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        account: str = None,
+        created_date: str = None,
+        crn: str = None,
+        name: str = None,
+        resource_created_date: str = None,
+        resource_group: str = None,
+        updated_date: str = None,
+    ) -> None:
         """
         Initialize a NamespaceDetails object.
 
         :param str account: (optional) The IBM Cloud account that owns the
                namespace.
-        :param str created_date: (optional) When the namespace was created.
-        :param str crn: (optional) If the namespace has been assigned to a resource
-               group, this is the IBM Cloud CRN representing the namespace.
+        :param str created_date: (optional) The creation date of the namespace.
+        :param str crn: (optional) If the namespace is assigned to a resource
+               group, the IBM Cloud CRN representing the namespace.
         :param str name: (optional)
-        :param str resource_created_date: (optional) When the namespace was
-               assigned to a resource group.
-        :param str resource_group: (optional) The resource group that the namespace
-               is assigned to.
-        :param str updated_date: (optional) When the namespace was last updated.
+        :param str resource_created_date: (optional) The date that the namespace
+               was assigned to a resource group.
+        :param str resource_group: (optional) The ID of the resource group to which
+               the namespace is assigned.
+        :param str updated_date: (optional) The date that the namespace was last
+               updated.
         """
         self.account = account
         self.created_date = created_date
@@ -2541,16 +2772,19 @@ class NamespaceDetails():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class Plan():
+
+class Plan:
     """
     The plan for the targeted IBM Cloud account.
 
     :attr str plan: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 plan: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        plan: str = None,
+    ) -> None:
         """
         Initialize a Plan object.
 
@@ -2596,7 +2830,8 @@ class Plan():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class Quota():
+
+class Quota:
     """
     Current usage and limits for the targeted IBM Cloud account.
 
@@ -2604,10 +2839,12 @@ class Quota():
     :attr QuotaDetails usage: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 limit: 'QuotaDetails' = None,
-                 usage: 'QuotaDetails' = None) -> None:
+    def __init__(
+        self,
+        *,
+        limit: 'QuotaDetails' = None,
+        usage: 'QuotaDetails' = None,
+    ) -> None:
         """
         Initialize a Quota object.
 
@@ -2636,9 +2873,15 @@ class Quota():
         """Return a json dictionary representing this model."""
         _dict = {}
         if hasattr(self, 'limit') and self.limit is not None:
-            _dict['limit'] = self.limit.to_dict()
+            if isinstance(self.limit, dict):
+                _dict['limit'] = self.limit
+            else:
+                _dict['limit'] = self.limit.to_dict()
         if hasattr(self, 'usage') and self.usage is not None:
-            _dict['usage'] = self.usage.to_dict()
+            if isinstance(self.usage, dict):
+                _dict['usage'] = self.usage
+            else:
+                _dict['usage'] = self.usage.to_dict()
         return _dict
 
     def _to_dict(self):
@@ -2659,7 +2902,8 @@ class Quota():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class QuotaDetails():
+
+class QuotaDetails:
     """
     QuotaDetails.
 
@@ -2669,10 +2913,12 @@ class QuotaDetails():
           -1 denotes "Unlimited".
     """
 
-    def __init__(self,
-                 *,
-                 storage_bytes: int = None,
-                 traffic_bytes: int = None) -> None:
+    def __init__(
+        self,
+        *,
+        storage_bytes: int = None,
+        traffic_bytes: int = None,
+    ) -> None:
         """
         Initialize a QuotaDetails object.
 
@@ -2726,7 +2972,8 @@ class QuotaDetails():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class RemoteAPIImage():
+
+class RemoteAPIImage:
     """
     Information about an image, in a format consistent with the Docker Remote API format.
 
@@ -2747,23 +2994,25 @@ class RemoteAPIImage():
     :attr str vulnerable: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 configuration_issue_count: int = None,
-                 created: int = None,
-                 digest_tags: dict = None,
-                 exempt_issue_count: int = None,
-                 id: str = None,
-                 issue_count: int = None,
-                 labels: dict = None,
-                 manifest_type: str = None,
-                 parent_id: str = None,
-                 repo_digests: List[str] = None,
-                 repo_tags: List[str] = None,
-                 size: int = None,
-                 virtual_size: int = None,
-                 vulnerability_count: int = None,
-                 vulnerable: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        configuration_issue_count: int = None,
+        created: int = None,
+        digest_tags: dict = None,
+        exempt_issue_count: int = None,
+        id: str = None,
+        issue_count: int = None,
+        labels: dict = None,
+        manifest_type: str = None,
+        parent_id: str = None,
+        repo_digests: List[str] = None,
+        repo_tags: List[str] = None,
+        size: int = None,
+        virtual_size: int = None,
+        vulnerability_count: int = None,
+        vulnerable: str = None,
+    ) -> None:
         """
         Initialize a RemoteAPIImage object.
 
@@ -2893,7 +3142,8 @@ class RemoteAPIImage():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class RestoreResult():
+
+class RestoreResult:
     """
     The result of restoring tags for a digest. In a successful request the digest is
     always restored, and zero or more of its tags may be restored.
@@ -2904,10 +3154,12 @@ class RestoreResult():
           were not restored because of a conflict.
     """
 
-    def __init__(self,
-                 *,
-                 successful: List[str] = None,
-                 unsuccessful: List[str] = None) -> None:
+    def __init__(
+        self,
+        *,
+        successful: List[str] = None,
+        unsuccessful: List[str] = None,
+    ) -> None:
         """
         Initialize a RestoreResult object.
 
@@ -2961,35 +3213,39 @@ class RestoreResult():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class RetentionPolicy():
+
+class RetentionPolicy:
     """
     A document that contains the image retention settings for a namespace.
 
-    :attr int images_per_repo: (optional) Determines how many images will be
-          retained for each repository when the retention policy is executed. The value -1
-          denotes 'Unlimited' (all images are retained).
+    :attr int images_per_repo: (optional) Determines how many images are retained in
+          each repository when the retention policy is processed. The value -1 denotes
+          'Unlimited' (all images are retained).
     :attr str namespace: The namespace to which the retention policy is attached.
-    :attr bool retain_untagged: (optional) Determines if untagged images are
-          retained when executing the retention policy. This is false by default meaning
-          untagged images will be deleted when the policy is executed.
+    :attr bool retain_untagged: (optional) Determines whether untagged images are
+          retained when the retention policy is processed. The value is false by default,
+          which means that  untagged images can be deleted when the policy runs.
     """
 
-    def __init__(self,
-                 namespace: str,
-                 *,
-                 images_per_repo: int = None,
-                 retain_untagged: bool = None) -> None:
+    def __init__(
+        self,
+        namespace: str,
+        *,
+        images_per_repo: int = None,
+        retain_untagged: bool = None,
+    ) -> None:
         """
         Initialize a RetentionPolicy object.
 
         :param str namespace: The namespace to which the retention policy is
                attached.
-        :param int images_per_repo: (optional) Determines how many images will be
-               retained for each repository when the retention policy is executed. The
+        :param int images_per_repo: (optional) Determines how many images are
+               retained in each repository when the retention policy is processed. The
                value -1 denotes 'Unlimited' (all images are retained).
-        :param bool retain_untagged: (optional) Determines if untagged images are
-               retained when executing the retention policy. This is false by default
-               meaning untagged images will be deleted when the policy is executed.
+        :param bool retain_untagged: (optional) Determines whether untagged images
+               are retained when the retention policy is processed. The value is false by
+               default, which means that  untagged images can be deleted when the policy
+               runs.
         """
         self.images_per_repo = images_per_repo
         self.namespace = namespace
@@ -3043,7 +3299,8 @@ class RetentionPolicy():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class RootFS():
+
+class RootFS:
     """
     RootFS contains information about the root filesystem of a container image.
 
@@ -3052,11 +3309,13 @@ class RootFS():
     :attr str type: (optional) The type of filesystem.
     """
 
-    def __init__(self,
-                 *,
-                 base_layer: str = None,
-                 layers: List[str] = None,
-                 type: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        base_layer: str = None,
+        layers: List[str] = None,
+        type: str = None,
+    ) -> None:
         """
         Initialize a RootFS object.
 
@@ -3116,7 +3375,8 @@ class RootFS():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class Trash():
+
+class Trash:
     """
     Details of the tags and days until expiry.
 
@@ -3124,10 +3384,12 @@ class Trash():
     :attr List[str] tags: (optional)
     """
 
-    def __init__(self,
-                 *,
-                 days_until_expiry: int = None,
-                 tags: List[str] = None) -> None:
+    def __init__(
+        self,
+        *,
+        days_until_expiry: int = None,
+        tags: List[str] = None,
+    ) -> None:
         """
         Initialize a Trash object.
 
@@ -3179,7 +3441,8 @@ class Trash():
         """Return `true` when self and other are not equal, false otherwise."""
         return not self == other
 
-class VAReport():
+
+class VAReport:
     """
     The VA Report for a given image.
 
@@ -3193,13 +3456,15 @@ class VAReport():
     :attr str vulnerable: (optional) Summary of vulnerability status.
     """
 
-    def __init__(self,
-                 *,
-                 configuration_issue_count: int = None,
-                 exempt_issue_count: int = None,
-                 issue_count: int = None,
-                 vulnerability_count: int = None,
-                 vulnerable: str = None) -> None:
+    def __init__(
+        self,
+        *,
+        configuration_issue_count: int = None,
+        exempt_issue_count: int = None,
+        issue_count: int = None,
+        vulnerability_count: int = None,
+        vulnerable: str = None,
+    ) -> None:
         """
         Initialize a VAReport object.
 
