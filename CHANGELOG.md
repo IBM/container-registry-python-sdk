@@ -1,3 +1,13 @@
+# [1.0.0](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.9...v1.0.0) (2023-06-21)
+
+
+* feat(upgrade) replace vav3 with vav4 ([31a76c3](https://github.com/IBM/container-registry-python-sdk/commit/31a76c3508248f5a78f8ad7811f94105ceed2638))
+
+
+### BREAKING CHANGES
+
+* VA API V3 has been removed and replaced with VA V4
+
 ## [0.0.9](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.8...v0.0.9) (2023-06-20)
 
 
