@@ -56,13 +56,13 @@ Service Name | Imported Class Name
 To install, use `pip` or `easy_install`:
 
 ```bash
-pip install --upgrade "ibm-container-registry>=0.0.9"
+pip install --upgrade "ibm-container-registry>=1.0.0"
 ```
 
 or
 
 ```bash
-easy_install --upgrade "ibm-container-registry>=0.0.9"
+easy_install --upgrade "ibm-container-registry>=1.0.0"
 ```
 
 ## Using the SDK
