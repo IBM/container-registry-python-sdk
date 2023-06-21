@@ -51,7 +51,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: main
-    # only on 1 matrix job
+    # only on Python 3.7
     python: '3.7'
 # ensure semantic-release is functional
 - provider: script
