@@ -83,6 +83,7 @@ def test_get_service_url_for_region():
     assert ContainerRegistryV1.get_service_url_for_region('jp-osa') == 'https://jp2.icr.io'
     assert ContainerRegistryV1.get_service_url_for_region('ca-tor') == 'https://ca.icr.io'
     assert ContainerRegistryV1.get_service_url_for_region('br-sao') == 'https://br.icr.io'
+    assert ContainerRegistryV1.get_service_url_for_region('eu-fr2') == 'https://fr2.icr.io'
 
 
 ##############################################################################
