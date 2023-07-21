@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/IBM/container-registry-python-sdk/compare/v1.0.0...v1.1.0) (2023-07-21)
+
+
+### Bug Fixes
+
+* **project:** Remediate vulnerability in semver ([6aedfd3](https://github.com/IBM/container-registry-python-sdk/commit/6aedfd3754da8ab0e814c86711172ba7ed30cefd))
+
+
+### Features
+
+* **project:** Add eu-fr2 endpoint ([ddf7177](https://github.com/IBM/container-registry-python-sdk/commit/ddf7177b336352233ad76ae0b065881aba721739))
+
 # [1.0.0](https://github.com/IBM/container-registry-python-sdk/compare/v0.0.9...v1.0.0) (2023-06-21)
 
 
