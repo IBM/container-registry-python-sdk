@@ -2,10 +2,8 @@
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 # IBM Cloud Container Registry Python SDK
 
-Python client library to interact with the [IBM Cloud Container Registry API](https://cloud.ibm.com/apidocs/container-registry), and [IBM Cloud Container Registry Vulnerability Advisor API](https://cloud.ibm.com/apidocs/container-registry/va)
+Python client library to interact with the [IBM Cloud Container Registry API](https://cloud.ibm.com/apidocs/container-registry), and [IBM Cloud Container Registry Vulnerability Advisor API](https://cloud.ibm.com/apidocs/container-registry/va-v4)
 
-Disclaimer: this SDK is being released initially as a **pre-release** version.
-Changes might occur which impact applications that use this SDK.
 
 ## Table of Contents
 
@@ -41,7 +39,7 @@ IBM Cloud services:
 Service Name | Imported Class Name
 --- | ---
 [Container Registry image management API](https://cloud.ibm.com/apidocs/container-registry) | ibm_container_registry.container_registry_v1
-[Container Registry Vulnerability Advisor API](https://cloud.ibm.com/apidocs/container-registry/va) | ibm_container_registry.vulnerability_advisor_v3
+[Container Registry Vulnerability Advisor API](https://cloud.ibm.com/apidocs/container-registry/va-v4) | ibm_container_registry.vulnerability_advisor_v4
 
 ## Prerequisites
 
