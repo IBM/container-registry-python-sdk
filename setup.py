@@ -19,7 +19,7 @@ import os
 import sys
 import pkg_resources
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 PACKAGE_NAME = 'ibm_container_registry'
 PACKAGE_DESC = 'IBM Cloud Container Registry Python SDK'
 
