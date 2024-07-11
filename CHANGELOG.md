@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.1...v1.1.2) (2024-07-11)
+
+
+### Bug Fixes
+
+* **project:** Upgrade micromatch for CVE-2024-4067 ([5645dc8](https://github.com/IBM/container-registry-python-sdk/commit/5645dc8073335604e17ff0532a46bf13f5687a35))
+
 ## [1.1.1](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.0...v1.1.1) (2024-06-12)
 
 
