@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.2...v1.1.3) (2024-11-18)
+
+
+### Bug Fixes
+
+* **project:** bump cross-spawn for CVE-2024-21538 ([c6b9d55](https://github.com/IBM/container-registry-python-sdk/commit/c6b9d55abbec0f25749d2cedea2b807f5a5de68c))
+
 ## [1.1.2](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.1...v1.1.2) (2024-07-11)
 
 
