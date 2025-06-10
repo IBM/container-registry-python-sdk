@@ -25,6 +25,7 @@ matrix:
     - python: 3.12
 
 before_install:
+- nvm install 20
 - npm install npm@latest -g
 - sudo apt-get update
 - sudo apt-get install pandoc
