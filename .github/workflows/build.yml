@@ -96,12 +96,14 @@ jobs:
 
       - name: Install Publishing Tools
         run: |
-          pip install bump-my-version
+          pip install bump-my-version build twine
           npm install
 
       - name: Run semantic-release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: npm run semantic-release
 
 # Made with Bob
