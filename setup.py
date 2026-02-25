@@ -16,16 +16,13 @@
 from setuptools import setup
 import os
 import sys
-import pkg_resources
 
 __version__ = '1.1.4'
 PACKAGE_NAME = 'ibm_container_registry'
 PACKAGE_DESC = 'IBM Cloud Container Registry Python SDK'
 
 with open('requirements.txt') as f:
-    install_requires = [
-        str(req) for req in pkg_resources.parse_requirements(f)
-    ]
+    install_requires = [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 if sys.argv[-1] == 'publish':
     # test server
