@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 import os
 import sys
 import pkg_resources
@@ -27,8 +26,6 @@ with open('requirements.txt') as f:
     install_requires = [
         str(req) for req in pkg_resources.parse_requirements(f)
     ]
-with open('requirements-dev.txt') as f:
-    tests_require = [str(req) for req in pkg_resources.parse_requirements(f)]
 
 if sys.argv[-1] == 'publish':
     # test server
@@ -49,7 +46,6 @@ setup(
     description=PACKAGE_DESC,
     license='Apache 2.0',
     install_requires=install_requires,
-    tests_require=tests_require,
     author='IBM',
     author_email='alchemy.registry.squad@uk.ibm.com',
     long_description=readme,
