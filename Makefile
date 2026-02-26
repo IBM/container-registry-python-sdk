@@ -32,3 +32,5 @@ test-int-va:
 
 lint:
 	./pylint.sh
+
+ci: deps dev_deps install_project test-unit lint

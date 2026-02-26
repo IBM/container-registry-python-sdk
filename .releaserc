@@ -6,13 +6,14 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
-      "@semantic-release/exec", 
+      "@semantic-release/exec",
       {
-        "prepareCmd": "bump2version --allow-dirty --current-version ${lastRelease.version} --new-version ${nextRelease.version} patch"
+        "prepareCmd": "bump-my-version bump --allow-dirty --current-version ${lastRelease.version} --new-version ${nextRelease.version} patch",
+        "publishCmd": "python -m build && twine upload dist/*"
       }
     ],
     [
-      "@semantic-release/git", 
+      "@semantic-release/git",
       {
         "message": "chore(release): ${nextRelease.version} release notes\n\n${nextRelease.notes}"
       }
