@@ -17,7 +17,7 @@ from setuptools import setup
 import os
 import sys
 
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 PACKAGE_NAME = 'ibm_container_registry'
 PACKAGE_DESC = 'IBM Cloud Container Registry Python SDK'
 
