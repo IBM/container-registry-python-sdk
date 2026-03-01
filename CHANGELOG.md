@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.3...v1.1.4) (2025-06-10)
+
+
+### Bug Fixes
+
+* **project:** bump requests ([96a3a8f](https://github.com/IBM/container-registry-python-sdk/commit/96a3a8fe7ba83240ee34f500286549225649e2e0))
+
 ## [1.1.3](https://github.com/IBM/container-registry-python-sdk/compare/v1.1.2...v1.1.3) (2024-11-18)
 
 
