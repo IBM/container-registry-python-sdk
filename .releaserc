@@ -12,6 +12,18 @@
         "publishCmd": "python -m build && twine upload dist/*"
       }
     ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "ibm_container_registry/version.py",
+          "setup.py",
+          "README.md"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
     "@semantic-release/github"
   ]
 }
